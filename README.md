@@ -11,6 +11,7 @@ which roughly consists of the following:
 * Sectioning
 * Timestamps (with repetition intervals)
 * Agenda generation
+* Outlining (if I need it)
 
 Almost all of these are already present in markdown's much cleaner and
 easier syntax, at least in syntactic extensions.
@@ -41,8 +42,12 @@ See it's readme for more details on usage and features.
   * **Both**: a combination of the above
 * and multiple output formats
   * **ANSI**: colored output on your terminal
-  * **Pango**: Same for GTK apps and awesomeWM-notifications to name just a few
+  * **Pango**: Same for GTK-apps and awesomeWM-notifications to name just a few
   * **Plaintext**: plain, non-colored text (ideal for further processing)
+
+* we've also got an outline generator:
+  * supports all the formats presented above
+  * supports multiple files as well
 
 And it's quite fast, due to the fact that it's written in Haskell.
 
@@ -81,7 +86,7 @@ $ cd morgue/agenda
 $ cabal install
 ``` 
 Then add `~/.cabal/bin` to your `$PATH` if you haven't already.
-Now run `morgue -h` for usage information.
+Now run `morgue -h`/`morgue-outline -h` for usage information.
 
 # TODO
 
