@@ -1,0 +1,6 @@
+*~
+*.swp
+*.o
+.ropeproject/*
+*/.ropeproject/*
+src/dist/*
