@@ -41,7 +41,7 @@ format ANSI s
               [SetColor Foreground Vivid Yellow] ++ s ++ cS
 
 formatH :: OutputFormat -> Int -> String -> String
-formatH f n s = (replicate ((n-1)*2) ' ') ++ formatted f
+formatH f n s = replicate ((n-1)*2) ' ' ++ formatted f
     where s' = "# " ++ s
           formatted Plaintext = s'
           formatted ANSI =
