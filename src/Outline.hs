@@ -11,7 +11,7 @@ import Format
 
 -- even less options than in Main.hs ;)
 data Options = Options { optOutput :: String -> IO ()
-                       , optFormat :: OutputFormat
+                       , optFormat :: !OutputFormat
                        }
 
 -- default: output on stdout, ANSI coloring
