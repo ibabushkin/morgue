@@ -17,7 +17,7 @@ data Options = Options { optMode       :: !AgendaMode
                        -- strict args (those that can fail)
                        , optNumDays    :: !Integer
                        , optOutput     :: String -> IO ()
-                       , optFormat     :: OutputFormat
+                       , optFormat     :: !OutputFormat
                        }
 
 -- default: 1 week agenda, output on stdout, ANSI coloring
