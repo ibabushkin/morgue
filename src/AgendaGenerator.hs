@@ -83,8 +83,8 @@ show' outFormat e = getToDo ++ getTimeMode ++ formatInlines (description e)
                           Nothing -> ""
 
 -- decide whether an element is to be included for a certain day  
-isRelevant :: UTCTime -> AgendaElement -> Bool
-isRelevant (UTCTime d' _) (Elem _ _ (Just ts@(Timestamp (UTCTime d _) _ r _))) =
+isRelevant :: LocalTime -> AgendaElement -> Bool
+isRelevant (LocalTime d' _) (Elem _ _ (Just ts@(Timestamp (UTCTime d _) _ r _))) =
     d == d' || repeatValid d' ts
         where repeatValid day start = case getNextTime start of
                      (Just ts'@(Timestamp (UTCTime next _) _ _ _))
@@ -95,8 +95,8 @@ isRelevant (UTCTime d' _) (Elem _ _ (Just ts@(Timestamp (UTCTime d _) _ r _))) =
 isRelevant _ _ = False
 
 -- decide whether a timed element is overdue at a certain day
-isOverdue :: UTCTime -> AgendaElement -> Bool 
-isOverdue (UTCTime d' _)
+isOverdue :: LocalTime -> AgendaElement -> Bool 
+isOverdue (LocalTime d' _)
           (Elem _ (Just True)
           (Just (Timestamp (UTCTime d _) _ _ _))) =
     d < d'
@@ -105,7 +105,7 @@ isOverdue _ _ = False
 -- return a string representing our agenda
 writeAgenda :: AgendaMode
             -> Either PandocError Pandoc
-            -> [UTCTime]
+            -> [LocalTime]
             -> OutputFormat
             -> String
 writeAgenda mode (Right (Pandoc _ blocks)) days outFormat
@@ -116,7 +116,7 @@ writeAgenda mode (Right (Pandoc _ blocks)) days outFormat
 writeAgenda _ _ _ _ = error "Pandoc error occured!"
 
 -- write an agenda for a number of days
-writeAgendaTimed :: [Block] -> [UTCTime] -> OutputFormat -> String
+writeAgendaTimed :: [Block] -> [LocalTime] -> OutputFormat -> String
 writeAgendaTimed blocks days outFormat =
     header ++ formatOverdue outFormat overdueElements ++ "\n" ++
         intercalate "\n" (map (formatDay outFormat) weekdayElements)
@@ -147,7 +147,7 @@ formatOverdue outFormat es
              map (('\t':) . show' outFormat) es
 
 -- format a day's agenda 
-formatDay :: OutputFormat -> (UTCTime, [AgendaElement]) -> String
+formatDay :: OutputFormat -> (LocalTime, [AgendaElement]) -> String
 formatDay outFormat (t, es) =
     format outFormat (formatTime defaultTimeLocale "%A, %d.%m.%Y:\n" t) ++ agenda
     where agenda = (intercalate "\n" . sort) $
@@ -225,6 +225,6 @@ getTimeFromElementBlock fis@(Str (m:s):is)
 getTimeFromElementBlock is = (Nothing, is)
 
 -- get the next 7 days beginning with a given date
-getFollowingDays :: UTCTime -> Integer -> [UTCTime]
-getFollowingDays d n = map (\i -> d{ utctDay = addDays i (utctDay d)}) [0..n]
+getFollowingDays :: LocalTime -> Integer -> [LocalTime]
+getFollowingDays d n = map (\i -> d{ localDay = addDays i (localDay d)}) [0..n]
 

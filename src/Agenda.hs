@@ -82,7 +82,11 @@ main = do
 
     -- look through the file(s) we are interested in
     inputs <- mapM readFile files
-    currentDay <- getCurrentTime
+
+    -- timezone + time hackery
+    currentTimeZone <- getCurrentTimeZone
+    currentUtcTime <- getCurrentTime
+    let currentDay = utcToLocalTime currentTimeZone currentUtcTime
 
     -- process 
     let days = getFollowingDays currentDay n
