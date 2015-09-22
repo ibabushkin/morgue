@@ -26,7 +26,7 @@ data RepeatInterval = Interval { numSteps :: Int
                                } deriving (Show, Read, Eq)
 
 -- a timestamp
-data Timestamp = Timestamp { timeValue :: UTCTime
+data Timestamp = Timestamp { timeValue :: LocalTime
                            , mode :: TimeMode
                            , repeat :: Maybe RepeatInterval
                            , toPrint :: Bool
@@ -42,17 +42,17 @@ getNextTime (Timestamp _ _ Nothing _) = Nothing
 getNextTime ts@(Timestamp t _ (Just (Interval n l)) _)
     | l == Day = Just $ ts{
         timeValue = (timeValue ts){
-            utctDay = addDays step day}}
+            localDay = addDays step day}}
     | l == Week = Just $ ts{
         timeValue = (timeValue ts){
-            utctDay = addDays (7*step) day}}
+            localDay = addDays (7*step) day}}
     | l == Month = Just $ ts{
         timeValue = (timeValue ts){
-            utctDay = addGregorianMonthsRollOver step day}}
+            localDay = addGregorianMonthsRollOver step day}}
     | l == Year = Just $ ts{
         timeValue = (timeValue ts){
-            utctDay = addGregorianYearsRollOver step day}}
-    where day = utctDay $ timeValue ts
+            localDay = addGregorianYearsRollOver step day}}
+    where day = localDay $ timeValue ts
           step = toInteger n
 
 -- the data type used to hold an element of an agenda  
@@ -84,10 +84,10 @@ show' outFormat e = getToDo ++ getTimeMode ++ formatInlines (description e)
 
 -- decide whether an element is to be included for a certain day  
 isRelevant :: LocalTime -> AgendaElement -> Bool
-isRelevant (LocalTime d' _) (Elem _ _ (Just ts@(Timestamp (UTCTime d _) _ r _))) =
+isRelevant (LocalTime d' _) (Elem _ _ (Just ts@(Timestamp (LocalTime d _) _ r _))) =
     d == d' || repeatValid d' ts
         where repeatValid day start = case getNextTime start of
-                     (Just ts'@(Timestamp (UTCTime next _) _ _ _))
+                     (Just ts'@(Timestamp (LocalTime next _) _ _ _))
                          | next > day -> False
                          | next < day -> repeatValid day ts'
                          | otherwise  -> True
@@ -98,7 +98,7 @@ isRelevant _ _ = False
 isOverdue :: LocalTime -> AgendaElement -> Bool 
 isOverdue (LocalTime d' _)
           (Elem _ (Just True)
-          (Just (Timestamp (UTCTime d _) _ _ _))) =
+          (Just (Timestamp (LocalTime d _) _ _ _))) =
     d < d'
 isOverdue _ _ = False
 
@@ -204,9 +204,9 @@ getTimeFromElementBlock fis@(Str (m:s):is)
     where (ftoken:tokens) = splitOn "/" . tail $ init s
           (timeval, print)
               | ':' `elem` ftoken = (parseTimeOrError True defaultTimeLocale
-                                        "%d.%m.%Y:%H:%M" ftoken :: UTCTime, True)
+                                        "%d.%m.%Y:%H:%M" ftoken :: LocalTime, True)
               | otherwise = (parseTimeOrError True defaultTimeLocale
-                                "%d.%m.%Y" ftoken :: UTCTime, False)
+                                "%d.%m.%Y" ftoken :: LocalTime, False)
           rep = case tokens of
                      ([r]) -> Just (readR r :: RepeatInterval)
                      _      -> Nothing
