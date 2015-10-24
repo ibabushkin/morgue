@@ -167,12 +167,12 @@ processBlock _ = []
 -- process a bullet list
 -- a list consists of a list of elements
 processList :: [[Block]] -> [AgendaElement]
-processList = map processElement
+processList = concatMap processElement
 
 -- process list element
 -- a list element consists of a list of blocks
-processElement :: [Block] -> AgendaElement
-processElement (b:_) = processElementBlock b
+processElement :: [Block] -> [AgendaElement]
+processElement (b:bs) = processElementBlock b : processBlocks bs
 processElement [] = error "Empty block." 
 
 -- process a block inside a list element

@@ -13,16 +13,17 @@ import AgendaGenerator
 import Format
 
 -- not many right now
-data Options = Options { optMode       :: !AgendaMode
-                       -- strict args (those that can fail)
-                       , optNumDays    :: !Integer
-                       , optOutput     :: String -> IO ()
-                       , optFormat     :: !OutputFormat
+data Options = Options { optMode         :: !AgendaMode
+                       , optDoubleSpaces :: Bool
+                       , optNumDays      :: !Integer
+                       , optOutput       :: String -> IO ()
+                       , optFormat       :: !OutputFormat
                        }
 
 -- default: 1 week agenda, output on stdout, ANSI coloring
 defaultOptions :: Options
 defaultOptions = Options { optMode    = Both
+                         , optDoubleSpaces = False
                          , optNumDays = 6
                          , optOutput  = putStrLn
                          , optFormat  = ANSI
@@ -37,6 +38,11 @@ options =
             "MODE")
         "Desired agenda mode. Possible values are\n\
         \'Timed', 'Todo' and 'Both'. Default: Both" 
+
+    , Option "d" ["double-spaces"]
+        (NoArg (\opt -> return opt { optDoubleSpaces = True }))
+        "Double amount of leading spaces (in case you use 2)"
+
     , Option "n" ["days"]
         (ReqArg
             (\arg opt -> return opt { optNumDays = readWrapper arg })
@@ -75,6 +81,7 @@ main = do
     let (actions, files, _) = getOpt RequireOrder options args
     opts <- foldl (>>=) (return defaultOptions) actions
     let Options { optMode = m
+                , optDoubleSpaces = ds
                 , optNumDays = n
                 , optOutput = output
                 , optFormat = format
@@ -91,7 +98,7 @@ main = do
     -- process 
     let days = getFollowingDays currentDay n
         readerOpts = def { readerParseRaw = False }
-        pandoc = readMarkdown readerOpts $ concat inputs
+        pandoc = readMarkdown readerOpts . doubleSpaces ds $ concat inputs
         results = writeAgenda m pandoc days format
     
     -- output
