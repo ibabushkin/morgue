@@ -12,6 +12,9 @@ import Text.Pandoc.Error
 
 import Format
 
+-- Tags
+type Tag = String
+
 -- pretty self-explanatory, huh?
 data TimeMode = Time | Deadline | Scheduled
     deriving (Show, Read, Eq)
@@ -36,6 +39,10 @@ data Timestamp = Timestamp { timeValue :: LocalTime
 instance Ord Timestamp where
     (<=) (Timestamp a _ _ _) (Timestamp b _ _ _) = a <= b
 
+-- get the next 7 days beginning with a given date
+getFollowingDays :: LocalTime -> Integer -> [LocalTime]
+getFollowingDays d n = map (\i -> d{localDay = addDays i (localDay d)}) [0..n]
+
 -- get the next date from a Timestamp with a repetition
 getNextTime :: Timestamp -> Maybe Timestamp
 getNextTime (Timestamp _ _ Nothing _) = Nothing
@@ -59,11 +66,12 @@ getNextTime ts@(Timestamp t _ (Just (Interval n l)) _)
 data AgendaElement = Elem { description :: [Inline]
                           , toDo :: Maybe Bool
                           , time :: Maybe Timestamp
-                          } deriving (Read, Eq)
+                          , tags :: [Tag]
+                          } deriving (Show, Read, Eq)
 
 -- make ordering possible
 instance Ord AgendaElement where
-    (<=) (Elem _ _ a) (Elem _ _ b) = a <= b
+    (<=) (Elem _ _ a _) (Elem _ _ b _) = a <= b
 
 -- what kind of agenda do we want?
 data AgendaMode = Timed | Todo | Both deriving (Show, Read, Eq)
@@ -84,7 +92,7 @@ show' outFormat e = getToDo ++ getTimeMode ++ formatInlines (description e)
 
 -- decide whether an element is to be included for a certain day  
 isRelevant :: LocalTime -> AgendaElement -> Bool
-isRelevant (LocalTime d' _) (Elem _ _ (Just ts@(Timestamp (LocalTime d _) _ r _))) =
+isRelevant (LocalTime d' _) (Elem _ _ (Just ts@(Timestamp (LocalTime d _) _ r _)) _) =
     d == d' || repeatValid d' ts
         where repeatValid day start = case getNextTime start of
                      (Just ts'@(Timestamp (LocalTime next _) _ _ _))
@@ -98,43 +106,46 @@ isRelevant _ _ = False
 isOverdue :: LocalTime -> AgendaElement -> Bool 
 isOverdue (LocalTime d' _)
           (Elem _ (Just True)
-          (Just (Timestamp (LocalTime d _) _ _ _))) =
+          (Just (Timestamp (LocalTime d _) _ _ _)) _) =
     d < d'
 isOverdue _ _ = False
+
+-- a filter used for tags
+type Filter = [AgendaElement] -> [AgendaElement]
 
 -- return a string representing our agenda
 writeAgenda :: AgendaMode
             -> Either PandocError Pandoc
             -> [LocalTime]
             -> OutputFormat
+            -> Filter
             -> String
-writeAgenda mode (Right (Pandoc _ blocks)) days outFormat
-    | mode == Timed = writeAgendaTimed blocks days outFormat
-    | mode == Todo  = writeAgendaTodo blocks outFormat
-    | otherwise     = writeAgendaTimed blocks days outFormat
-                         ++ "\n\n" ++ writeAgendaTodo blocks outFormat
-writeAgenda _ _ _ _ = error "Pandoc error occured!"
+writeAgenda mode (Right (Pandoc _ blocks)) days outFormat tagFilter
+    | mode == Timed = writeAgendaTimed blocks days outFormat tagFilter
+    | mode == Todo  = writeAgendaTodo blocks outFormat tagFilter
+    | otherwise     = writeAgendaTimed blocks days outFormat tagFilter
+                         ++ "\n\n" ++ writeAgendaTodo blocks outFormat tagFilter
+writeAgenda _ _ _ _ _ = error "Pandoc error occured!"
 
 -- write an agenda for a number of days
-writeAgendaTimed :: [Block] -> [LocalTime] -> OutputFormat -> String
-writeAgendaTimed blocks days outFormat =
+writeAgendaTimed :: [Block] -> [LocalTime] -> OutputFormat -> Filter -> String
+writeAgendaTimed blocks days outFormat tagFilter =
     header ++ formatOverdue outFormat overdueElements ++ "\n" ++
         intercalate "\n" (map (formatDay outFormat) weekdayElements)
-    where elements = processBlocks blocks
+    where elements = tagFilter $ processBlocks [] blocks
           overdueElements = filter (isOverdue $ head days) elements
           weekdayElements = map (\d -> (d, filter (isRelevant d) elements)) days
           header = format outFormat $ "Week agenda (" ++ weeks ++ "):\n"
           week1 = formatTime defaultTimeLocale "%V" $ head days
           week2 = formatTime defaultTimeLocale "%V" $ last days 
-          weeks
-              | week1 == week2 = 'W':week1
-              | otherwise = 'W':week1 ++ "-" ++ 'W':week2
+          weeks | week1 == week2 = 'W':week1
+                | otherwise = 'W':week1 ++ "-" ++ 'W':week2
 
 -- write an agenda with all TODO's that don't have a date assigned
-writeAgendaTodo :: [Block] -> OutputFormat -> String
-writeAgendaTodo blocks outFormat = 
+writeAgendaTodo :: [Block] -> OutputFormat -> Filter -> String
+writeAgendaTodo blocks outFormat tagFilter = 
     header ++ (intercalate "\n" . map (show' outFormat)) (filter helper elements)
-    where elements = processBlocks blocks
+    where elements = tagFilter $ processBlocks [] blocks
           helper e = isNothing (time e) && isJust (toDo e)
           header = format outFormat "Global list of TODO's:\n" 
 
@@ -154,37 +165,40 @@ formatDay outFormat (t, es) =
              map (('\t':) . show' outFormat) es
 
 -- process blocks
-processBlocks :: [Block] -> [AgendaElement]
-processBlocks = concatMap processBlock
+processBlocks :: [Tag] -> [Block] -> [AgendaElement]
+processBlocks ts = concat . map (processBlock ts)
 
 -- process a block
 -- lists are interpreted as lists of tasks, apointments etc.
-processBlock :: Block -> [AgendaElement]
-processBlock (BulletList bs) = processList bs
-processBlock (OrderedList _ bs) = processList bs
-processBlock _ = []
+processBlock :: [Tag] -> Block -> [AgendaElement]
+processBlock ts (BulletList bs) = processList ts bs
+processBlock ts (OrderedList _ bs) = processList ts bs
+processBlock _ _ = []
 
 -- process a bullet list
 -- a list consists of a list of elements
-processList :: [[Block]] -> [AgendaElement]
-processList = concatMap processElement
+processList :: [Tag] -> [[Block]] -> [AgendaElement]
+processList ts = concat . map (processElement ts)
 
 -- process list element
 -- a list element consists of a list of blocks
-processElement :: [Block] -> [AgendaElement]
-processElement (b:bs) = processElementBlock b : processBlocks bs
-processElement [] = error "Empty block." 
+processElement :: [Tag] -> [Block] -> [AgendaElement]
+processElement ts (b:bs) = e:es
+    where e = processElementBlock ts b
+          es = processBlocks (tags e) bs
+processElement _ [] = error "Empty block." 
 
 -- process a block inside a list element
-processElementBlock :: Block -> AgendaElement
-processElementBlock (Plain is) = processElementBlock' is
-processElementBlock (Para is)  = processElementBlock' is 
+processElementBlock :: [Tag] -> Block -> AgendaElement
+processElementBlock ts (Plain is) = processElementBlock' ts is
+processElementBlock ts (Para is)  = processElementBlock' ts is 
 
--- helper because sometimes where clauses suck :/ 
-processElementBlock' :: [Inline] -> AgendaElement
-processElementBlock' is = Elem is'' todo time
-    where (todo, is' ) = getCheckboxFromElementBlock is
-          (time, is'') = getTimeFromElementBlock is'
+-- helper
+processElementBlock' :: [Tag] -> [Inline] -> AgendaElement
+processElementBlock' ts is = Elem is''' todo time (ts ++ tags)
+    where (todo, is'  ) = getCheckboxFromElementBlock is
+          (time, is'' ) = getTimeFromElementBlock is'
+          (tags, is''') = getTagsFromElementBlock is''
 
 -- get a checkbox state and the rest of the block without any trailing spaces
 getCheckboxFromElementBlock :: [Inline] -> (Maybe Bool, [Inline])
@@ -194,6 +208,17 @@ getCheckboxFromElementBlock is
     | otherwise = (Nothing, is)
     where td = [Str "[", Space, Str "]"]
           dn = [Str "[x]"]
+
+getTagsFromElementBlock :: [Inline] -> ([Tag], [Inline])
+getTagsFromElementBlock is = 
+    case reverse is of
+      (Str s:is') -> process s is'
+      _ -> ([], is)
+    where process (':':s') is' =
+              case last s' of
+                ':' -> (splitOn ":" (init s'), (reverse is'))
+                _ -> ([], is)
+          process _ _ = ([], is)
 
 -- get a time and the rest of the block 
 getTimeFromElementBlock :: [Inline] -> (Maybe Timestamp, [Inline])
@@ -223,8 +248,3 @@ getTimeFromElementBlock fis@(Str (m:s):is)
                    'D' -> Deadline
                    'S' -> Scheduled
 getTimeFromElementBlock is = (Nothing, is)
-
--- get the next 7 days beginning with a given date
-getFollowingDays :: LocalTime -> Integer -> [LocalTime]
-getFollowingDays d n = map (\i -> d{ localDay = addDays i (localDay d)}) [0..n]
-

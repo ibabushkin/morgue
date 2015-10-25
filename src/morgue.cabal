@@ -10,7 +10,7 @@ name:                morgue
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.6.0.0
+version:             0.7.1.0
 
 -- A short (one-line) description of the package.
 synopsis:            markdown org replacement
@@ -54,14 +54,14 @@ executable morgue
   main-is:             Agenda.hs
   
   -- Modules included in this executable, other than Main.
-  other-modules:       AgendaGenerator
+  other-modules:       AgendaGenerator, Util, Format
   
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:    
   
   -- Other library packages from which modules are imported.
   build-depends:       base >= 4.7.0,
-                       time >= 1.4.0,
+                       time >= 1.5.0.0,
                        pandoc >= 1.15.0,
                        old-locale >= 1.0.0,
                        split >= 0.2.0,
@@ -77,6 +77,8 @@ executable morgue-outline
   main-is:             Outline.hs
   other-modules:       OutlineGenerator
   build-depends:       base >= 4.7.0,
+                       time >= 1.5.0.0,
                        pandoc >= 1.15.0,
+                       split >= 0.2.0,
                        ansi-terminal >= 0.6.0
   default-language:    Haskell2010

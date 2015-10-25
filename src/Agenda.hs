@@ -3,6 +3,7 @@ import System.Exit
 import System.Environment (getArgs, getProgName)
 import System.Console.GetOpt
 
+import Data.List.Split (splitOn)
 import Data.Time
 import Control.Exception (evaluate)
 
@@ -15,6 +16,8 @@ import Format
 -- not many right now
 data Options = Options { optMode         :: !AgendaMode
                        , optDoubleSpaces :: Bool
+                       , optTags         :: Maybe [Tag]
+                       , optSkipTags     :: Maybe [Tag]
                        , optNumDays      :: !Integer
                        , optOutput       :: String -> IO ()
                        , optFormat       :: !OutputFormat
@@ -24,6 +27,8 @@ data Options = Options { optMode         :: !AgendaMode
 defaultOptions :: Options
 defaultOptions = Options { optMode    = Both
                          , optDoubleSpaces = False
+                         , optTags = Nothing
+                         , optSkipTags = Nothing
                          , optNumDays = 6
                          , optOutput  = putStrLn
                          , optFormat  = ANSI
@@ -42,6 +47,22 @@ options =
     , Option "d" ["double-spaces"]
         (NoArg (\opt -> return opt { optDoubleSpaces = True }))
         "Double amount of leading spaces (in case you use 2)"
+
+    , Option "t" ["tags"]
+        (ReqArg
+            (\arg opt -> return opt { optTags = Just $ splitOn ":" arg
+                                    , optSkipTags = Nothing })
+            "TAGS")
+        "A colon-separated list of tags to include.\n\
+        \If present, ignores all other tags."
+
+    , Option "s" ["skip-tags"]
+        (ReqArg
+            (\arg opt -> return opt { optSkipTags = Just $ splitOn ":" arg
+                                    , optTags = Nothing })
+            "TAGS")
+        "A colon-separated list of tags to ignore.\n\
+        \If present, includes all other tags."
 
     , Option "n" ["days"]
         (ReqArg
@@ -82,6 +103,8 @@ main = do
     opts <- foldl (>>=) (return defaultOptions) actions
     let Options { optMode = m
                 , optDoubleSpaces = ds
+                , optTags = tags
+                , optSkipTags = skipTags
                 , optNumDays = n
                 , optOutput = output
                 , optFormat = format
@@ -99,7 +122,7 @@ main = do
     let days = getFollowingDays currentDay n
         readerOpts = def { readerParseRaw = False }
         pandoc = readMarkdown readerOpts . doubleSpaces ds $ concat inputs
-        results = writeAgenda m pandoc days format
+        results = writeAgenda m pandoc days format (tagFilter tags skipTags)
     
     -- output
     output results
