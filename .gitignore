@@ -3,4 +3,4 @@
 *.o
 .ropeproject/*
 */.ropeproject/*
-src/dist/*
+dist/*

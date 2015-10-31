@@ -1,44 +1,64 @@
 {-# LANGUAGE FlexibleContexts #-}
 
+import Data.List (groupBy, intercalate, sortOn)
 import Data.List.Split (splitOn)
 import Text.ParserCombinators.Parsec hiding (newline)
 
 -- parsing helper
-parse' rule text = parse rule "bla" text
+parse' rule = parse rule "bla"
 
--- the ADT type we map our parsed iCal entries to
-data VEvent = VEvent [EventProperty]
-    deriving (Show, Eq)
+-- an event as saved in the iCal file
+data Event = Event { summary :: String
+                   , dtStart :: String
+                   , location :: String
+                   , categories :: String
+                   } deriving (Show, Eq, Ord)
+                   
+-- show an event as a markdown bullet-point
+eventToMd :: Event -> String
+eventToMd (Event s t l c) = "* " ++ t ++ " "++ s ++ last (words c) ++ ", " ++ l ++ "\n"
 
-data EventProperty = UID String
-                   | Summary String
-                   | DtStart String String
-                   | DtEnd String String
-                   | Sequence Int
-                   | XMozGeneration Int
-                   | DtStamp String
-                   | Location String
-                   | Categories [String]
-                   | Description String
-                   | Class String
-    deriving (Show, Eq)
+-- convert a iCal file to markdown
+convertFile :: FilePath -> IO String
+convertFile p = do result <- parse parseDocument p <$> readFile p
+                   case result of
+                     (Right es) -> return $ concatMap eventToMd es
+                     (Left _) -> return "An error occured!"
+    where gr e1 e2 = categories e1 == categories e2
+
+-- parse an event
+parseEvent :: Parser Event
+parseEvent = begin "VEVENT" *> uselessLine *>
+    (Event <$> (string "SUMMARY:" *> rest) <*> time <*>
+        (uselessLine *> uselessLine *> uselessLine *> uselessLine *>
+         string "LOCATION:" *> rest) <*>
+         (string "CATEGORIES:" *> rest)) <*
+         uselessLine <* uselessLine <* end "VEVENT"
+    where uselessLine = many (noneOf "\r\n") <* newline
+          rest = many (noneOf "\r\n") <* newline
+          time = many (noneOf ":") *> char ':' *> timestamp <* newline
+          timestamp = do year <- count 4 digit
+                         month <- count 2 digit
+                         day <- count 2 digit
+                         char 'T'
+                         hour <- count 2 digit
+                         minute <- count 2 digit
+                         count 2 digit
+                         return $ "T[" ++ day ++ "." ++ month ++ "." ++ year ++
+                             ":" ++ hour ++ ":" ++ minute ++ "]"
 
 -- parse the whole document
-parseDocument :: Parser [VEvent]
+parseDocument :: Parser [Event]
 parseDocument =
     (begin "VCALENDAR" <* skipUntilTimezone) *>
-        many (parseVevent <* newline)
+        many (parseEvent <* newline)
         <* end "VCALENDAR"
 
 -- skip timezone info
 skipUntilTimezone :: Parser ()
 skipUntilTimezone = section *> section *> pure ()
     where uselessLine = many (noneOf "\r\n") <* newline
-          section = (uselessLine `manyTill` newline)
-
--- a complete section describing an event
-parseVevent :: Parser VEvent
-parseVevent = VEvent <$> (begin "VEVENT" *> many line <* end "VEVENT")
+          section = uselessLine `manyTill` newline
 
 -- beginning of a section
 begin :: String -> Parser String
@@ -48,25 +68,8 @@ begin s = string ("BEGIN:" ++ s) <* newline
 end :: String -> Parser String
 end s = string ("END:" ++ s) <* newline
 
--- parse a line in a VEVENT section
-line :: Parser EventProperty
-line = keyword <*> (char ':' *> many (noneOf "\r\n")) <* newline
-
 newline :: Parser String
 newline = string "\n" <|> string "\r\n" <|> string "\r"
 
--- parse a keyword and return a (partially applied) constructor
-keyword :: Parser (String -> EventProperty)
-keyword = choice [ string "UID" *> pure UID
-                 , try (string "SUMMARY") *> pure Summary
-                 , try (string "DTSTART;") *> (DtStart <$> (many $ noneOf ":")) 
-                 , try (string "DTEND;") *> (DtEnd <$> (many $ noneOf ":"))
-                 , try (string "SEQUENCE") *> pure (Sequence . read)
-                 , try (string "X-MOZ-GENERATION") *> pure
-                       (XMozGeneration . read)
-                 , try (string "DTSTAMP") *> pure DtStamp
-                 , try (string "LOCATION") *> pure Location
-                 , try (string "CATEGORIES") *> pure (Categories . splitOn ",")
-                 , try (string "DESCRIPTION") *> pure Description
-                 , try (string "CLASS") *> pure Class
-                 ]
+main :: IO ()
+main = convertFile "/home/thewormkill/notes.ics" >>= putStrLn
