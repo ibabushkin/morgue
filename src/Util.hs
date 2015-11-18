@@ -4,6 +4,7 @@ import Data.List (intersect)
 import Data.Maybe (fromMaybe)
 
 import Text.Read (readMaybe)
+import Text.Pandoc
 
 import AgendaGenerator (Tag, AgendaElement(..))
 

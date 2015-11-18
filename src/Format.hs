@@ -56,20 +56,29 @@ formatH f n s = replicate ((n-1)*2) ' ' ++ formatted f
 formatInlines :: [Inline] -> String
 formatInlines = concatMap formatInline
 
--- format inline to a simplified markdown
+-- format inline to a simplified markdown, used for parsing(!) and display
 formatInline :: Inline -> String
 formatInline (Str s) = s
 formatInline (Emph is) = wrapIn "*" $ formatInlines is
 formatInline (Strong is) = wrapIn "**" $ formatInlines is
 formatInline (Strikeout is) = wrapIn "~~" $ formatInlines is
+formatInline (Superscript is) = "^{" ++ formatInlines is ++ "}"
+formatInline (Subscript is) = "_{" ++ formatInlines is ++ "}"
+formatInline (SmallCaps is) = formatInlines is
 formatInline (Quoted q is) = let q' = if q == DoubleQuote
                                       then "\""
                                       else "'"
                               in wrapIn q' $ formatInlines is 
+formatInline (Cite _ is) = formatInlines is
 formatInline (Code _ s) = wrapIn "`" s
 formatInline Space = " "
+formatInline LineBreak = " "
+formatInline (Math DisplayMath s) = wrapIn "$$" s
+formatInline (Math InlineMath s) = wrapIn "$" s
+formatInline (RawInline (Format "tex") s) = s
 formatInline (Link is t) = fst t -- links become urls.
 formatInline (Image is t) = fst t -- same for images
+formatInline (Span _ is) = formatInlines is 
 formatInline _ = "" -- ignore the rest
 
 -- wrap text in a tag-like structure

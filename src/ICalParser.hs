@@ -4,9 +4,6 @@ import Data.List (groupBy, intercalate, sortOn)
 import Data.List.Split (splitOn)
 import Text.ParserCombinators.Parsec hiding (newline)
 
--- parsing helper
-parse' rule = parse rule "bla"
-
 -- an event as saved in the iCal file
 data Event = Event { summary :: String
                    , dtStart :: String

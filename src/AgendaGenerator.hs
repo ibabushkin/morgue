@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module AgendaGenerator where
 
 import Data.List (intercalate, isPrefixOf, sort, sortBy)
@@ -7,6 +9,7 @@ import Data.Time
 import Data.Time.Calendar
 import Data.Time.Format
 
+import Text.ParserCombinators.Parsec
 import Text.Pandoc
 import Text.Pandoc.Error
 
@@ -63,7 +66,7 @@ getNextTime ts@(Timestamp t _ (Just (Interval n l)) _)
           step = toInteger n
 
 -- the data type used to hold an element of an agenda  
-data AgendaElement = Elem { description :: [Inline]
+data AgendaElement = Elem { description :: String
                           , toDo :: Maybe Bool
                           , time :: Maybe Timestamp
                           , tags :: [Tag]
@@ -78,7 +81,7 @@ data AgendaMode = Timed | Todo | Both deriving (Show, Read, Eq)
 
 -- format agenda elements
 show' :: OutputFormat -> AgendaElement -> String
-show' outFormat e = getToDo ++ getTimeMode ++ formatInlines (description e)
+show' outFormat e = getToDo ++ getTimeMode ++ (description e)
     where getToDo
              | toDo e == Just True = format outFormat "TODO" ++ ":\t"
              | toDo e == Just False = format outFormat "DONE" ++ ":\t"
@@ -193,58 +196,66 @@ processElementBlock :: [Tag] -> Block -> AgendaElement
 processElementBlock ts (Plain is) = processElementBlock' ts is
 processElementBlock ts (Para is)  = processElementBlock' ts is 
 
--- helper
+-- barebones string-based element parsing
 processElementBlock' :: [Tag] -> [Inline] -> AgendaElement
-processElementBlock' ts is = Elem is''' todo time (ts ++ tags)
-    where (todo, is'  ) = getCheckboxFromElementBlock is
-          (time, is'' ) = getTimeFromElementBlock is'
-          (tags, is''') = getTagsFromElementBlock is''
+processElementBlock' ts is = addTags ts $ parseElement is
 
--- get a checkbox state and the rest of the block without any trailing spaces
-getCheckboxFromElementBlock :: [Inline] -> (Maybe Bool, [Inline])
-getCheckboxFromElementBlock is
-    | td `isPrefixOf` is = (Just True, drop 4 is) -- drop the space
-    | dn `isPrefixOf` is = (Just False, drop 2 is)  -- same here
-    | otherwise = (Nothing, is)
-    where td = [Str "[", Space, Str "]"]
-          dn = [Str "[x]"]
+-- parse a list of Inlines as a String
+parseElement :: [Inline] -> AgendaElement
+parseElement is = case parse elementP "source" (formatInlines is) of
+                    Left e -> error $ show e ++ '\n': formatInlines is
+                    Right a -> a
 
-getTagsFromElementBlock :: [Inline] -> ([Tag], [Inline])
-getTagsFromElementBlock is = 
-    case reverse is of
-      (Str s:is') -> process s is'
-      _ -> ([], is)
-    where process (':':s') is' =
-              case last s' of
-                ':' -> (splitOn ":" (init s'), (reverse is'))
-                _ -> ([], is)
-          process _ _ = ([], is)
+-- AgendaElement parser
+elementP :: Parser AgendaElement
+elementP = do td <- optionMaybe $ checkboxP <* space
+              ts <- optionMaybe $ timestampP <* space
+              de <- intercalate " " <$> many (try $ word <* option ' ' space)
+              tg <- tagsP
+              return $ Elem de td ts tg
+    where word = (:) <$> noneOf ": " <*> (many $ noneOf " ")
 
--- get a time and the rest of the block 
-getTimeFromElementBlock :: [Inline] -> (Maybe Timestamp, [Inline])
-getTimeFromElementBlock fis@(Str (m:s):is) 
-    | (head s == '[') && (last s == ']') =
-        (Just (Timestamp timeval mode rep print), tail is)
-    | otherwise = (Nothing, fis) -- "full" is
-    where (ftoken:tokens) = splitOn "/" . tail $ init s
-          (timeval, print)
-              | ':' `elem` ftoken = (parseTimeOrError True defaultTimeLocale
-                                        "%d.%m.%Y:%H:%M" ftoken :: LocalTime, True)
-              | otherwise = (parseTimeOrError True defaultTimeLocale
-                                "%d.%m.%Y" ftoken :: LocalTime, False)
-          rep = case tokens of
-                     ([r]) -> Just (readR r :: RepeatInterval)
-                     _      -> Nothing
-          readR ('+':s) = Interval num ts
-              where ts = case last s of
-                           'd' -> Day
-                           'w' -> Week
-                           'm' -> Month
-                           'y' -> Year
-                    num = read (init s) :: Int 
-          readR _ = error "Cannot read repeat interval: Wrong format!"
-          mode = case m of
-                   'T' -> Time
-                   'D' -> Deadline
-                   'S' -> Scheduled
-getTimeFromElementBlock is = (Nothing, is)
+-- checkbox parser
+checkboxP :: Parser Bool
+checkboxP = (try $ string "[ ]" *> pure True) <|>
+    (try $ string "[x]" *> pure False)
+
+-- tags parser
+tagsP :: Parser [Tag]
+tagsP = option [] . try $ (char ':') *> many1 (many1 (noneOf ":") <* char ':')
+
+timestampP :: Parser Timestamp
+timestampP = try $ do
+    mode <- modeP
+    char '['
+    inp <- getInput
+    let (format, tp) = getFormat inp
+    time <- parseTime format <$>
+        (many $ noneOf "/]")
+    repeat <- optionMaybe repeatP
+    char ']'
+    return $ Timestamp time mode repeat tp
+    where getFormat i | length i >= 11 && i !! 10 == ':' =
+                             ("%d.%m.%Y:%H:%M", True)
+                      | otherwise = ("%d.%m.%Y", True)
+          parseTime :: String -> String -> LocalTime
+          parseTime = parseTimeOrError True defaultTimeLocale
+
+repeatP :: Parser RepeatInterval
+repeatP = try $ char '/' *> char '+' *>
+    (Interval <$> read <$> (many digit) <*> (getInterval <$> oneOf "dwmy"))
+    where getInterval 'd' = Day
+          getInterval 'w' = Week
+          getInterval 'm' = Month
+          getInterval 'y' = Year
+
+modeP :: Parser TimeMode
+modeP = getMode <$> oneOf "DTS"
+    where getMode 'D' = Deadline
+          getMode 'T' = Time
+          getMOde 'S' = Scheduled
+
+-- add tags to an AgendaElement
+addTags :: [Tag] -> AgendaElement -> AgendaElement
+addTags ts a = a {tags = ts ++ ts'}
+    where ts' = tags a
