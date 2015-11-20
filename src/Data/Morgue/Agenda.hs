@@ -1,6 +1,7 @@
 module Data.Morgue.Agenda
     ( Options
     , runAgenda
+    , main
     )
 where
 

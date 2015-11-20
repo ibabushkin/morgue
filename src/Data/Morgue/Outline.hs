@@ -1,6 +1,7 @@
 module Data.Morgue.Outline
     ( runOutline,
-      Options
+      Options,
+      main
     )
 where
 

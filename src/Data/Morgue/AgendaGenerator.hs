@@ -237,7 +237,7 @@ timestampP = try $ do
     return $ Timestamp time mode repeat tp
     where getFormat i | length i >= 11 && i !! 10 == ':' =
                              ("%d.%m.%Y:%H:%M", True)
-                      | otherwise = ("%d.%m.%Y", True)
+                      | otherwise = ("%d.%m.%Y", False)
           parseTime :: String -> String -> LocalTime
           parseTime = parseTimeOrError True defaultTimeLocale
 
