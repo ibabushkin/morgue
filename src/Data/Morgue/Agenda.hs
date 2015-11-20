@@ -1,3 +1,9 @@
+module Data.Morgue.Agenda
+    ( Options
+    , runAgenda
+    )
+where
+
 import System.IO
 import System.Exit
 import System.Environment (getArgs, getProgName)
@@ -9,9 +15,9 @@ import Control.Exception (evaluate)
 
 import Text.Pandoc
 
-import Util
-import AgendaGenerator
-import Format
+import Data.Morgue.Util
+import Data.Morgue.AgendaGenerator
+import Data.Morgue.Format
 
 -- not many right now
 data Options = Options { optMode         :: !AgendaMode
@@ -94,13 +100,9 @@ options =
         "Show this help."
     ]
 
--- do stuff.
-main :: IO ()
-main = do
-    -- handle args
-    args <- getArgs
-    let (actions, files, _) = getOpt RequireOrder options args
-    opts <- foldl (>>=) (return defaultOptions) actions
+-- perform computations
+runAgenda :: Options -> String -> IO ()
+runAgenda opts input = do
     let Options { optMode = m
                 , optDoubleSpaces = ds
                 , optTags = tags
@@ -110,9 +112,6 @@ main = do
                 , optFormat = format
                 } = opts
 
-    -- look through the file(s) we are interested in
-    inputs <- mapM readFile files
-
     -- timezone + time hackery
     currentTimeZone <- getCurrentTimeZone
     currentUtcTime <- getCurrentTime
@@ -121,8 +120,15 @@ main = do
     -- process 
     let days = getFollowingDays currentDay n
         readerOpts = def { readerParseRaw = False }
-        pandoc = readMarkdown readerOpts . doubleSpaces ds $ concat inputs
-        results = writeAgenda m pandoc days format (tagFilter tags skipTags)
-    
-    -- output
-    output results
+        pandoc = readMarkdown readerOpts $ doubleSpaces ds input
+    output $ writeAgenda m pandoc days format (tagFilter tags skipTags)
+
+-- do stuff.
+main :: IO ()
+main = do
+    -- handle args
+    args <- getArgs
+    let (actions, files, _) = getOpt RequireOrder options args
+    opts <- foldl (>>=) (return defaultOptions) actions
+    -- look through the file(s) we are interested in
+    concat <$> mapM readFile files >>= runAgenda opts

@@ -5,9 +5,9 @@ import System.Console.GetOpt
 
 import Text.Pandoc
 
-import Util
-import OutlineGenerator
-import Format
+import Data.Morgue.Util
+import Data.Morgue.OutlineGenerator
+import Data.Morgue.Format
 
 -- even less options than in Main.hs ;)
 data Options = Options { optOutput :: String -> IO ()

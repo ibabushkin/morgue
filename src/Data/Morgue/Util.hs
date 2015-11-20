@@ -1,4 +1,4 @@
-module Util where
+module Data.Morgue.Util where
 
 import Data.List (intersect)
 import Data.Maybe (fromMaybe)
@@ -6,7 +6,7 @@ import Data.Maybe (fromMaybe)
 import Text.Read (readMaybe)
 import Text.Pandoc
 
-import AgendaGenerator (Tag, AgendaElement(..))
+import Data.Morgue.AgendaGenerator (Tag, AgendaElement(..))
 
 readWrapper :: (Read a) => String -> a
 readWrapper s = fromMaybe

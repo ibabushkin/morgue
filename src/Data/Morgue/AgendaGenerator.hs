@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module AgendaGenerator where
+module Data.Morgue.AgendaGenerator where
 
 import Data.List (intercalate, isPrefixOf, sort, sortBy)
 import Data.List.Split (splitOn)
@@ -13,7 +13,7 @@ import Text.ParserCombinators.Parsec
 import Text.Pandoc
 import Text.Pandoc.Error
 
-import Format
+import Data.Morgue.Format
 
 -- Tags
 type Tag = String

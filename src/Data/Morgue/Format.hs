@@ -1,4 +1,4 @@
-module Format where
+module Data.Morgue.Format where
 
 import System.Console.ANSI
 

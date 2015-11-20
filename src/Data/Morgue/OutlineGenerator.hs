@@ -1,11 +1,11 @@
-module OutlineGenerator where
+module Data.Morgue.OutlineGenerator where
 
 import Data.List (intercalate)
 
 import Text.Pandoc
 import Text.Pandoc.Error
 
-import Format
+import Data.Morgue.Format
 
 -- return a string representing our outline
 writeOutline :: Either PandocError Pandoc
