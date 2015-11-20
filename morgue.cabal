@@ -49,7 +49,8 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Data.Morgue.Agenda
+  exposed-modules:     Data.Morgue.Agenda,
+                       Data.Morgue.Outline
   hs-source-dirs:      src,
                        src/Data/Morgue 
   build-depends:       base >= 4.7.0,

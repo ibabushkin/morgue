@@ -1,3 +1,9 @@
+module Data.Morgue.Outline
+    ( runOutline,
+      Options
+    )
+where
+
 import System.IO
 import System.Exit
 import System.Environment (getArgs, getProgName)
@@ -47,6 +53,17 @@ options =
         "Show this help."
     ]
 
+runOutline :: Options -> String -> IO ()
+runOutline os input = do
+    let Options { optOutput = output
+                , optFormat = format
+                } = os
+
+    -- process
+    let readerOpts = def { readerParseRaw = False }
+        pandoc = readMarkdown readerOpts input
+    output $ writeOutline pandoc format
+
 -- do stuff
 main :: IO ()
 main = do
@@ -54,17 +71,6 @@ main = do
     args <- getArgs
     let (actions, files, _) = getOpt RequireOrder options args
     opts <- foldl (>>=) (return defaultOptions) actions
-    let Options { optOutput = output
-                , optFormat = format
-                } = opts
 
     -- look through the file(s) we are interested in
-    inputs <- mapM readFile files
-
-    -- process
-    let readerOpts = def { readerParseRaw = False }
-        pandoc = readMarkdown readerOpts $ concat inputs
-        results = writeOutline pandoc format
-
-    -- output
-    output results
+    concat <$> mapM readFile files >>= runOutline opts
