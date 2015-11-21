@@ -1,3 +1,6 @@
+{- | this module handles formatting anything to a
+String (given a desired ouput format).
+-}
 module Data.Morgue.Format where
 
 import System.Console.ANSI
@@ -6,10 +9,10 @@ import Data.List (isPrefixOf)
 
 import Text.Pandoc
 
--- how do we want to display something?
+-- | supported output formats
 data OutputFormat = Plaintext | Pango | ANSI deriving (Show, Read, Eq)
 
--- format a string according to args:
+-- | format a string
 format :: OutputFormat -> String -> String
 format Plaintext s = s
 format Pango s
@@ -40,6 +43,7 @@ format ANSI s
           yellow = setSGRCode
               [SetColor Foreground Vivid Yellow] ++ s ++ cS
 
+-- | format a header for an outline
 formatH :: OutputFormat -> Int -> String -> String
 formatH f n s = replicate ((n-1)*2) ' ' ++ formatted f
     where s' = "# " ++ s
@@ -52,11 +56,11 @@ formatH f n s = replicate ((n-1)*2) ' ' ++ formatted f
           colorP = ["red", "green", "yellow", "blue", "magenta", "cyan", "white"] !! n'
           n' = n `mod` 7
 
--- format inlines
+-- | format inlines
 formatInlines :: [Inline] -> String
 formatInlines = concatMap formatInline
 
--- format inline to a simplified markdown, used for parsing(!) and display
+-- | format inline to a simplified markdown, used for parsing(!) and display
 formatInline :: Inline -> String
 formatInline (Str s) = s
 formatInline (Emph is) = wrapIn "*" $ formatInlines is
@@ -81,6 +85,6 @@ formatInline (Image is t) = fst t -- same for images
 formatInline (Span _ is) = formatInlines is 
 formatInline _ = "" -- ignore the rest
 
--- wrap text in a tag-like structure
+-- | wrap text in a tag-like structure
 wrapIn :: String -> String -> String
 wrapIn w c = w ++ c ++ w

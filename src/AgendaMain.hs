@@ -1,3 +1,6 @@
+{- | The main module of the morgue-executable, allowing
+to generate agendas from specially formatted markdown files.
+-}
 module Main where
 
 import Data.List.Split (splitOn)
@@ -10,7 +13,7 @@ import System.IO (hPutStrLn, stderr)
 import Data.Morgue.Agenda
 import Data.Morgue.Util
 
--- options registered with GetOpt
+-- | options to be registered with GetOpt
 options :: [ OptDescr (Options -> IO Options) ]
 options =
     [ Option "m" ["mode"]
@@ -70,7 +73,7 @@ options =
         "Show this help."
     ]
 
--- do stuff.
+-- | do stuff we need to do
 main :: IO ()
 main = do
     -- handle args

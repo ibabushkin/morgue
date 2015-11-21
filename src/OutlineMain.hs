@@ -1,3 +1,6 @@
+{- | The main module of the executable morgue-outline,
+which is a simple outliner for markdown files.
+-}
 module Main where
 
 import System.Console.GetOpt

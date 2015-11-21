@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
+-- | Generating agendas from Pandoc-Trees.
 module Data.Morgue.AgendaGenerator where
 
 import Data.List (intercalate, isPrefixOf, sort, sortBy)
@@ -15,38 +16,37 @@ import Text.Pandoc.Error
 
 import Data.Morgue.Format
 
--- Tags
+-- | Tags are just Strings "attached" to `AgendaElement`s
 type Tag = String
 
--- pretty self-explanatory, huh?
+-- | The kind of Timing selected for an `AgendaElement`
 data TimeMode = Time | Deadline | Scheduled
     deriving (Show, Read, Eq)
 
--- a time step: week, day, month, year
+-- | A time step for reoccuring events
 data TimeStep = Day | Week | Month | Year
     deriving (Show, Read, Eq)
 
--- a repetition interval
+-- | A repetition interval for reoccuring events, expressed in `TimeStep`s 
 data RepeatInterval = Interval { numSteps :: Int
                                , lenSteps :: TimeStep
                                } deriving (Show, Read, Eq)
 
--- a timestamp
+-- | A timestamp as defined in a markdown file
 data Timestamp = Timestamp { timeValue :: LocalTime
                            , mode :: TimeMode
                            , repeat :: Maybe RepeatInterval
                            , toPrint :: Bool
                            } deriving (Show, Read, Eq)
 
--- make ordering possible
 instance Ord Timestamp where
     (<=) (Timestamp a _ _ _) (Timestamp b _ _ _) = a <= b
 
--- get the next 7 days beginning with a given date
+-- | get the next 7 days beginning with a given date
 getFollowingDays :: LocalTime -> Integer -> [LocalTime]
 getFollowingDays d n = map (\i -> d{localDay = addDays i (localDay d)}) [0..n]
 
--- get the next date from a Timestamp with a repetition
+-- | get the next date from a Timestamp with a repetition
 getNextTime :: Timestamp -> Maybe Timestamp
 getNextTime (Timestamp _ _ Nothing _) = Nothing
 getNextTime ts@(Timestamp t _ (Just (Interval n l)) _)
@@ -65,21 +65,20 @@ getNextTime ts@(Timestamp t _ (Just (Interval n l)) _)
     where day = localDay $ timeValue ts
           step = toInteger n
 
--- the data type used to hold an element of an agenda  
+-- | the data type used to hold an element of an agenda  
 data AgendaElement = Elem { description :: String
                           , toDo :: Maybe Bool
                           , time :: Maybe Timestamp
                           , tags :: [Tag]
                           } deriving (Show, Read, Eq)
 
--- make ordering possible
 instance Ord AgendaElement where
     (<=) (Elem _ _ a _) (Elem _ _ b _) = a <= b
 
--- what kind of agenda do we want?
+-- | what kind of agenda do we want?
 data AgendaMode = Timed | Todo | Both deriving (Show, Read, Eq)
 
--- format agenda elements
+-- | format agenda elements
 show' :: OutputFormat -> AgendaElement -> String
 show' outFormat e = getToDo ++ getTimeMode ++ (description e)
     where getToDo
@@ -93,7 +92,7 @@ show' outFormat e = getToDo ++ getTimeMode ++ (description e)
                               | otherwise -> format outFormat (show m) ++ ":\t"
                           Nothing -> ""
 
--- decide whether an element is to be included for a certain day  
+-- | decide whether an element is to be included for a certain day
 isRelevant :: LocalTime -> AgendaElement -> Bool
 isRelevant (LocalTime d' _) (Elem _ _ (Just ts@(Timestamp (LocalTime d _) _ r _)) _) =
     d == d' || repeatValid d' ts
@@ -105,7 +104,7 @@ isRelevant (LocalTime d' _) (Elem _ _ (Just ts@(Timestamp (LocalTime d _) _ r _)
                      Nothing -> False  
 isRelevant _ _ = False
 
--- decide whether a timed element is overdue at a certain day
+-- | decide whether a timed element is overdue at a certain day
 isOverdue :: LocalTime -> AgendaElement -> Bool 
 isOverdue (LocalTime d' _)
           (Elem _ (Just True)
@@ -113,10 +112,10 @@ isOverdue (LocalTime d' _)
     d < d'
 isOverdue _ _ = False
 
--- a filter used for tags
+-- | a filter used for tags
 type Filter = [AgendaElement] -> [AgendaElement]
 
--- return a string representing our agenda
+-- | return a string representing our agenda
 writeAgenda :: AgendaMode
             -> Either PandocError Pandoc
             -> [LocalTime]
@@ -130,7 +129,7 @@ writeAgenda mode (Right (Pandoc _ blocks)) days outFormat tagFilter
                          ++ "\n\n" ++ writeAgendaTodo blocks outFormat tagFilter
 writeAgenda _ _ _ _ _ = error "Pandoc error occured!"
 
--- write an agenda for a number of days
+-- | write an agenda for a number of days
 writeAgendaTimed :: [Block] -> [LocalTime] -> OutputFormat -> Filter -> String
 writeAgendaTimed blocks days outFormat tagFilter =
     header ++ formatOverdue outFormat overdueElements ++ "\n" ++
@@ -144,7 +143,7 @@ writeAgendaTimed blocks days outFormat tagFilter =
           weeks | week1 == week2 = 'W':week1
                 | otherwise = 'W':week1 ++ "-" ++ 'W':week2
 
--- write an agenda with all TODO's that don't have a date assigned
+-- | write an agenda with all TODO's that don't have a date assigned
 writeAgendaTodo :: [Block] -> OutputFormat -> Filter -> String
 writeAgendaTodo blocks outFormat tagFilter = 
     header ++ (intercalate "\n" . map (show' outFormat)) (filter helper elements)
@@ -152,7 +151,7 @@ writeAgendaTodo blocks outFormat tagFilter =
           helper e = isNothing (time e) && isJust (toDo e)
           header = format outFormat "Global list of TODO's:\n" 
 
--- format overdue elements
+-- | format overdue elements
 formatOverdue :: OutputFormat -> [AgendaElement] -> String 
 formatOverdue outFormat es
     | agenda /= "" = format outFormat "OVERDUE" ++ ":\n" ++ agenda
@@ -160,53 +159,56 @@ formatOverdue outFormat es
     where agenda = intercalate "\n" . sortBy (flip compare) $
              map (('\t':) . show' outFormat) es
 
--- format a day's agenda 
+-- | format a day's agenda 
 formatDay :: OutputFormat -> (LocalTime, [AgendaElement]) -> String
 formatDay outFormat (t, es) =
     format outFormat (formatTime defaultTimeLocale "%A, %d.%m.%Y:\n" t) ++ agenda
     where agenda = (intercalate "\n" . sort) $
              map (('\t':) . show' outFormat) es
 
--- process blocks
+-- | process blocks, passing on parent tags
 processBlocks :: [Tag] -> [Block] -> [AgendaElement]
 processBlocks ts = concat . map (processBlock ts)
 
--- process a block
--- lists are interpreted as lists of tasks, apointments etc.
+{- | process a block,
+lists are interpreted as lists of tasks, apointments etc.
+-}
 processBlock :: [Tag] -> Block -> [AgendaElement]
 processBlock ts (BulletList bs) = processList ts bs
 processBlock ts (OrderedList _ bs) = processList ts bs
 processBlock _ _ = []
 
--- process a bullet list
--- a list consists of a list of elements
+{- | process a bullet list,
+a list consists of a list of elements
+-}
 processList :: [Tag] -> [[Block]] -> [AgendaElement]
 processList ts = concat . map (processElement ts)
 
--- process list element
--- a list element consists of a list of blocks
+{- | process list element,
+a list element consists of a list of blocks
+-}
 processElement :: [Tag] -> [Block] -> [AgendaElement]
 processElement ts (b:bs) = e:es
     where e = processElementBlock ts b
           es = processBlocks (tags e) bs
 processElement _ [] = error "Empty block." 
 
--- process a block inside a list element
+-- | process a block inside a list element
 processElementBlock :: [Tag] -> Block -> AgendaElement
 processElementBlock ts (Plain is) = processElementBlock' ts is
 processElementBlock ts (Para is)  = processElementBlock' ts is 
 
--- barebones string-based element parsing
+-- | barebones string-based element parsing
 processElementBlock' :: [Tag] -> [Inline] -> AgendaElement
 processElementBlock' ts is = addTags ts $ parseElement is
 
--- parse a list of Inlines as a String
+-- | parse a list of Inlines as a String
 parseElement :: [Inline] -> AgendaElement
 parseElement is = case parse elementP "source" (formatInlines is) of
                     Left e -> error $ show e ++ '\n': formatInlines is
                     Right a -> a
 
--- AgendaElement parser
+-- | AgendaElement parser
 elementP :: Parser AgendaElement
 elementP = do td <- optionMaybe $ checkboxP <* space
               ts <- optionMaybe $ timestampP <* space
@@ -215,15 +217,16 @@ elementP = do td <- optionMaybe $ checkboxP <* space
               return $ Elem de td ts tg
     where word = (:) <$> noneOf ": " <*> (many $ noneOf " ")
 
--- checkbox parser
+-- | checkbox parser
 checkboxP :: Parser Bool
 checkboxP = (try $ string "[ ]" *> pure True) <|>
     (try $ string "[x]" *> pure False)
 
--- tags parser
+-- | tags parser
 tagsP :: Parser [Tag]
 tagsP = option [] . try $ (char ':') *> many1 (many1 (noneOf ":") <* char ':')
 
+-- | timestamp parser
 timestampP :: Parser Timestamp
 timestampP = try $ do
     mode <- modeP
@@ -241,6 +244,7 @@ timestampP = try $ do
           parseTime :: String -> String -> LocalTime
           parseTime = parseTimeOrError True defaultTimeLocale
 
+-- | repetition interval parser
 repeatP :: Parser RepeatInterval
 repeatP = try $ char '/' *> char '+' *>
     (Interval <$> read <$> (many digit) <*> (getInterval <$> oneOf "dwmy"))
@@ -249,13 +253,14 @@ repeatP = try $ char '/' *> char '+' *>
           getInterval 'm' = Month
           getInterval 'y' = Year
 
+-- | element time mode parser
 modeP :: Parser TimeMode
 modeP = getMode <$> oneOf "DTS"
     where getMode 'D' = Deadline
           getMode 'T' = Time
           getMOde 'S' = Scheduled
 
--- add tags to an AgendaElement
+-- | add tags to an AgendaElement
 addTags :: [Tag] -> AgendaElement -> AgendaElement
 addTags ts a = a {tags = ts ++ ts'}
     where ts' = tags a

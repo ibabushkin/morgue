@@ -1,3 +1,4 @@
+-- | interface to outline generation, encapsulating options etc.
 module Data.Morgue.Outline
     ( runOutline,
       Options(..),
@@ -11,17 +12,18 @@ import Data.Morgue.Util
 import Data.Morgue.OutlineGenerator
 import Data.Morgue.Format
 
--- even less options than in Main.hs ;)
+-- | options supported
 data Options = Options { optOutput :: String -> IO ()
                        , optFormat :: !OutputFormat
                        }
 
--- default: output on stdout, ANSI coloring
+-- | default options: output on stdout, ANSI coloring
 defaultOptions :: Options
 defaultOptions = Options { optOutput = putStrLn
                          , optFormat = ANSI
                          }
 
+-- | perform computations to generate an outline
 runOutline :: Options -> String -> IO ()
 runOutline os input = do
     let Options { optOutput = output

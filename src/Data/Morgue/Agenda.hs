@@ -1,3 +1,4 @@
+-- | Interface to agenda generation, encapsulating options etc.
 module Data.Morgue.Agenda
     ( Options(..)
     , defaultOptions
@@ -13,7 +14,7 @@ import Data.Morgue.AgendaGenerator
 import Data.Morgue.Format
 import Data.Morgue.Util
 
--- not many right now
+-- | options supported for agenda generation
 data Options = Options { optMode         :: !AgendaMode
                        , optDoubleSpaces :: Bool
                        , optTags         :: Maybe [Tag]
@@ -23,7 +24,7 @@ data Options = Options { optMode         :: !AgendaMode
                        , optFormat       :: !OutputFormat
                        }
 
--- default: 1 week agenda, output on stdout, ANSI coloring
+-- | default options: 1 week agenda, output on stdout, ANSI coloring
 defaultOptions :: Options
 defaultOptions = Options { optMode    = Both
                          , optDoubleSpaces = False
@@ -34,7 +35,7 @@ defaultOptions = Options { optMode    = Both
                          , optFormat  = ANSI
                          }
 
--- perform computations
+-- | perform computations based on options given
 runAgenda :: Options -> String -> IO ()
 runAgenda opts input = do
     let Options { optMode = m
