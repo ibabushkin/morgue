@@ -1,6 +1,7 @@
 -- | interface to outline generation, encapsulating options etc.
 module Data.Morgue.Outline
     ( runOutline,
+      getOutline,
       Options(..),
       defaultOptions
     )
@@ -24,11 +25,15 @@ defaultOptions = Options { optOutput = putStrLn
                          }
 
 -- | perform computations to generate an outline
-runOutline :: Options -> String -> IO ()
-runOutline os input = do
+getOutline :: Options -> String -> IO String
+getOutline opts input = do
     let Options { optOutput = output
                 , optFormat = format
-                } = os
+                } = opts
         readerOpts = def { readerParseRaw = False }
         pandoc = readMarkdown readerOpts input
-    output $ writeOutline pandoc format
+    return $ writeOutline pandoc format
+
+-- | output an outline based on options
+runOutline :: Options -> String -> IO ()
+runOutline opts input = getOutline opts input >>= optOutput opts

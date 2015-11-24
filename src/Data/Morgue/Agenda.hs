@@ -3,6 +3,7 @@ module Data.Morgue.Agenda
     ( Options(..)
     , defaultOptions
     , runAgenda
+    , getAgenda
     )
 where
 
@@ -36,14 +37,14 @@ defaultOptions = Options { optMode    = Both
                          }
 
 -- | perform computations based on options given
-runAgenda :: Options -> String -> IO ()
-runAgenda opts input = do
+getAgenda :: Options -> String -> IO String
+getAgenda opts input = do
     let Options { optMode = m
                 , optDoubleSpaces = ds
                 , optTags = tags
                 , optSkipTags = skipTags
                 , optNumDays = n
-                , optOutput = output
+                --, optOutput = output
                 , optFormat = format
                 } = opts
     currentTimeZone <- getCurrentTimeZone
@@ -52,4 +53,8 @@ runAgenda opts input = do
         days = getFollowingDays currentDay n
         readerOpts = def { readerParseRaw = False }
         pandoc = readMarkdown readerOpts $ doubleSpaces ds input
-    output $ writeAgenda m pandoc days format (tagFilter tags skipTags)
+    return $ writeAgenda m pandoc days format (tagFilter tags skipTags)
+
+-- | output an agenda based on options
+runAgenda :: Options -> String -> IO ()
+runAgenda opts input = getAgenda opts input >>= optOutput opts
