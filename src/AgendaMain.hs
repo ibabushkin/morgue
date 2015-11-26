@@ -11,6 +11,7 @@ import System.Exit (exitSuccess)
 import System.IO (hPutStrLn, stderr)
 
 import Data.Morgue.Agenda
+import Data.Morgue.Options
 import Data.Morgue.Util
 
 -- | options to be registered with GetOpt

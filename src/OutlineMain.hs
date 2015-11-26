@@ -10,6 +10,7 @@ import System.IO (hPutStrLn, stderr)
 
 
 import Data.Morgue.Outline
+import Data.Morgue.Options
 import Data.Morgue.Util
 
 -- options registered with GetOpt
