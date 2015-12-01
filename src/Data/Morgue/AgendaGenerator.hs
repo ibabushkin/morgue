@@ -258,7 +258,7 @@ modeP :: Parser TimeMode
 modeP = getMode <$> oneOf "DTS"
     where getMode 'D' = Deadline
           getMode 'T' = Time
-          getMOde 'S' = Scheduled
+          getMode 'S' = Scheduled
 
 -- | add tags to an AgendaElement
 addTags :: [Tag] -> AgendaElement -> AgendaElement
