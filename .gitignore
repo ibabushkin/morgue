@@ -4,3 +4,4 @@
 .ropeproject/*
 */.ropeproject/*
 dist/*
+.stack-work/*

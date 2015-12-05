@@ -53,7 +53,8 @@ formatH f n s = replicate ((n-1)*2) ' ' ++ formatted f
           formatted Pango = 
               "<span color=\"" ++ colorP ++ "\">" ++ s' ++ "</span>"
           colorA = enumFromTo Red White !! n'
-          colorP = ["red", "green", "yellow", "blue", "magenta", "cyan", "white"] !! n'
+          colorP = ["red", "green", "yellow"
+                   , "blue", "magenta", "cyan", "white"] !! n'
           n' = n `mod` 7
 
 -- | format inlines
