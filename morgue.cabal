@@ -60,6 +60,10 @@ executable morgue-outline
   main-is:             OutlineMain.hs
   other-modules:       Data.Morgue.Outline,
                        Data.Morgue.OutlineGenerator
+                       Data.Morgue.Agenda,
+                       Data.Morgue.AgendaGenerator,
+                       Data.Morgue.Util,
+                       Data.Morgue.Format
   build-depends:       base >= 4.7.0,
                        time >= 1.5.0.0,
                        pandoc >= 1.15.0,
