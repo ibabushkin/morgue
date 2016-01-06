@@ -1,5 +1,5 @@
 name:                morgue
-version:             0.8.2.1
+version:             0.8.3.0
 synopsis:            markdown org replacement
 description:         A tool to parse markdown files in a specific format and generate agendas, todo-lists etc.
 homepage:            http://www.github.com/ibabushkin/morgue

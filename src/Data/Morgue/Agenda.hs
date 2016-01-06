@@ -28,25 +28,23 @@ defaultOptions = AgendaOptions
     }
 
 -- | perform computations based on options given
-getAgenda :: Options -> String -> IO String
-getAgenda opts input = do
+getAgenda :: Options -> String -> TimeZone -> UTCTime -> String
+getAgenda opts input tz time =
     let AgendaOptions
          { optMode = m
          , optDoubleSpaces = ds
          , optTags = tags
          , optSkipTags = skipTags
          , optNumDays = n
-         --, optOutput = output
          , optFormat = format
          } = opts
-    currentTimeZone <- getCurrentTimeZone
-    currentUtcTime <- getCurrentTime
-    let currentDay = utcToLocalTime currentTimeZone currentUtcTime
+        currentDay = utcToLocalTime tz time
         days = getFollowingDays currentDay n
         readerOpts = def { readerParseRaw = False }
         pandoc = readMarkdown readerOpts $ doubleSpaces ds input
-    return $ writeAgenda m pandoc days format (tagFilter tags skipTags)
+     in writeAgenda m pandoc days format (tagFilter tags skipTags)
 
 -- | output an agenda based on options
 runAgenda :: Options -> String -> IO ()
-runAgenda opts input = getAgenda opts input >>= optOutput opts
+runAgenda opts input = (getAgenda opts input <$> getCurrentTimeZone <*>
+    getCurrentTime) >>= optOutput opts

@@ -21,16 +21,12 @@ defaultOptions = OutlineOptions
     }
 
 -- | perform computations to generate an outline
-getOutline :: Options -> String -> IO String
-getOutline opts input = do
-    let OutlineOptions
-         { optOutput = output
-         , optFormat = format
-         } = opts
-        readerOpts = def { readerParseRaw = False }
+getOutline :: Options -> String -> String
+getOutline OutlineOptions{optOutput = output , optFormat = format} input = 
+    let readerOpts = def { readerParseRaw = False }
         pandoc = readMarkdown readerOpts input
-    return $ writeOutline pandoc format
+     in writeOutline pandoc format
 
 -- | output an outline based on options
 runOutline :: Options -> String -> IO ()
-runOutline opts input = getOutline opts input >>= optOutput opts
+runOutline opts input = optOutput opts $ getOutline opts input
