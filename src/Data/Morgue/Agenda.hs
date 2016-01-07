@@ -28,8 +28,8 @@ defaultOptions = AgendaOptions
     }
 
 -- | perform computations based on options given
-getAgenda :: Options -> String -> TimeZone -> UTCTime -> String
-getAgenda opts input tz time =
+getAgenda :: Options -> TimeZone -> UTCTime -> String -> String
+getAgenda opts tz time input =
     let AgendaOptions
          { optMode = m
          , optDoubleSpaces = ds
@@ -46,5 +46,5 @@ getAgenda opts input tz time =
 
 -- | output an agenda based on options
 runAgenda :: Options -> String -> IO ()
-runAgenda opts input = (getAgenda opts input <$> getCurrentTimeZone <*>
-    getCurrentTime) >>= optOutput opts
+runAgenda opts input = (getAgenda opts <$> getCurrentTimeZone <*>
+    getCurrentTime <*> pure input) >>= optOutput opts
