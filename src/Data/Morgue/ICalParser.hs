@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+module ICalParser where
 
 import Data.List (groupBy, intercalate, sortOn)
 import Data.List.Split (splitOn)
@@ -13,7 +14,10 @@ data Event = Event { summary :: String
                    
 -- show an event as a markdown bullet-point
 eventToMd :: Event -> String
-eventToMd (Event s t l c) = "* " ++ t ++ " "++ s ++ last (words c) ++ ", " ++ l ++ "\n"
+eventToMd (Event s t l c) = "* " ++ t ++ " "++ s ++ cat ++ ", " ++ l ++ "\n"
+    where cat = case words c of
+                  (r:_) -> r
+                  [] -> ""
 
 -- convert a iCal file to markdown
 convertFile :: FilePath -> IO String
@@ -69,4 +73,4 @@ newline :: Parser String
 newline = string "\n" <|> string "\r\n" <|> string "\r"
 
 main :: IO ()
-main = convertFile "/home/thewormkill/notes.ics" >>= putStrLn
+main = convertFile "/home/thewormkill/downloads/notes.ics" >>= putStrLn
