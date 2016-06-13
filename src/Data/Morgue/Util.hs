@@ -26,5 +26,5 @@ doubleSpaces False = id
 -- | create a tag filter
 tagFilter :: Maybe [Tag] -> Maybe [Tag] -> [AgendaElement] -> [AgendaElement]
 tagFilter (Just ts) _ = filter (\(Elem _ _ _ ts') -> ts `intersect` ts' /= [])
-tagFilter _ (Just ts) = filter (\(Elem _ _ _ ts') -> ts `intersect` ts' == [])
+tagFilter _ (Just ts) = filter (\(Elem _ _ _ ts') -> null $ ts `intersect` ts')
 tagFilter _ _ = id

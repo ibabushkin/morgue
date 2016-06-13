@@ -81,8 +81,8 @@ formatInline LineBreak = " "
 formatInline (Math DisplayMath s) = wrapIn "$$" s
 formatInline (Math InlineMath s) = wrapIn "$" s
 formatInline (RawInline (Format "tex") s) = s
-formatInline (Link is t) = fst t -- links become urls.
-formatInline (Image is t) = fst t -- same for images
+formatInline (Link _ _ t) = fst t -- links become urls.
+formatInline (Image _ _ t) = fst t -- same for images
 formatInline (Span _ is) = formatInlines is 
 formatInline _ = "" -- ignore the rest
 

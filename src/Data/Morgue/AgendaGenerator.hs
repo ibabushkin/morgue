@@ -80,7 +80,7 @@ data AgendaMode = Timed | Todo | Both deriving (Show, Read, Eq)
 
 -- | format agenda elements
 show' :: OutputFormat -> AgendaElement -> String
-show' outFormat e = getToDo ++ getTimeMode ++ (description e)
+show' outFormat e = getToDo ++ getTimeMode ++ description e
     where getToDo
              | toDo e == Just True = format outFormat "TODO" ++ ":\t"
              | toDo e == Just False = format outFormat "DONE" ++ ":\t"
@@ -168,7 +168,7 @@ formatDay outFormat (t, es) =
 
 -- | process blocks, passing on parent tags
 processBlocks :: [Tag] -> [Block] -> [AgendaElement]
-processBlocks ts = concat . map (processBlock ts)
+processBlocks ts = concatMap (processBlock ts)
 
 {- | process a block,
 lists are interpreted as lists of tasks, apointments etc.
@@ -182,7 +182,7 @@ processBlock _ _ = []
 a list consists of a list of elements
 -}
 processList :: [Tag] -> [[Block]] -> [AgendaElement]
-processList ts = concat . map (processElement ts)
+processList ts = concatMap (processElement ts)
 
 {- | process list element,
 a list element consists of a list of blocks
@@ -212,19 +212,19 @@ parseElement is = case parse elementP "source" (formatInlines is) of
 elementP :: Parser AgendaElement
 elementP = do td <- optionMaybe $ checkboxP <* space
               ts <- optionMaybe $ timestampP <* space
-              de <- intercalate " " <$> many (try $ word <* option ' ' space)
+              de <- unwords <$> many (try $ word <* option ' ' space)
               tg <- tagsP
               return $ Elem de td ts tg
-    where word = (:) <$> noneOf ": " <*> (many $ noneOf " ")
+    where word = (:) <$> noneOf ": " <*> many (noneOf " ")
 
 -- | checkbox parser
 checkboxP :: Parser Bool
-checkboxP = (try $ string "[ ]" *> pure True) <|>
-    (try $ string "[x]" *> pure False)
+checkboxP = try (string "[ ]" *> pure True) <|>
+    try (string "[x]" *> pure False)
 
 -- | tags parser
 tagsP :: Parser [Tag]
-tagsP = option [] . try $ (char ':') *> many1 (many1 (noneOf ":") <* char ':')
+tagsP = option [] . try $ char ':' *> many1 (many1 (noneOf ":") <* char ':')
 
 -- | timestamp parser
 timestampP :: Parser Timestamp
@@ -233,8 +233,7 @@ timestampP = try $ do
     char '['
     inp <- getInput
     let (format, tp) = getFormat inp
-    time <- parseTime format <$>
-        (many $ noneOf "/]")
+    time <- parseTime format <$> many (noneOf "/]")
     repeat <- optionMaybe repeatP
     char ']'
     return $ Timestamp time mode repeat tp
@@ -247,7 +246,7 @@ timestampP = try $ do
 -- | repetition interval parser
 repeatP :: Parser RepeatInterval
 repeatP = try $ char '/' *> char '+' *>
-    (Interval <$> read <$> (many digit) <*> (getInterval <$> oneOf "dwmy"))
+    (Interval . read <$> many digit <*> (getInterval <$> oneOf "dwmy"))
     where getInterval 'd' = Day
           getInterval 'w' = Week
           getInterval 'm' = Month
