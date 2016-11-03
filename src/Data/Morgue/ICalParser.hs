@@ -73,4 +73,4 @@ newline :: Parser String
 newline = string "\n" <|> string "\r\n" <|> string "\r"
 
 main :: IO ()
-main = convertFile "/home/thewormkill/downloads/notes.ics" >>= putStrLn
+main = convertFile "/home/thewormkill/org/notes.ics" >>= putStrLn
