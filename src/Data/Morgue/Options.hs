@@ -20,18 +20,20 @@ convertOptions s@SAgendaOptions{} =
 convertOptions (SOutlineOptions format) =
     OutlineOptions putStrLn format
 
-data Options = AgendaOptions
-    { optMode         :: !AgendaMode
-    , optDoubleSpaces :: Bool
-    , optTags         :: Maybe [Tag]
-    , optSkipTags     :: Maybe [Tag]
-    , optNumDays      :: !Integer
-    , optOutput       :: String -> IO ()
-    , optFormat       :: !OutputFormat
-    } | OutlineOptions
-    { optOutput :: String -> IO ()
-    , optFormat :: !OutputFormat
-    }
+data Options
+    = AgendaOptions
+        { optMode         :: !AgendaMode
+        , optDoubleSpaces :: Bool
+        , optTags         :: Maybe [Tag]
+        , optSkipTags     :: Maybe [Tag]
+        , optNumDays      :: !Integer
+        , optOutput       :: String -> IO ()
+        , optFormat       :: !OutputFormat
+        }
+    | OutlineOptions
+        { optOutput :: String -> IO ()
+        , optFormat :: !OutputFormat
+        }
 
 instance Show Options where
     show (OutlineOptions _ f) = "OutlineOptions " ++ show f

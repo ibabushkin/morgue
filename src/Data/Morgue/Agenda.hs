@@ -1,10 +1,10 @@
--- | Interface to agenda generation, encapsulating options etc.
+{-# LANGUAGE RecordWildCards #-}
 module Data.Morgue.Agenda
     ( defaultOptions
     , runAgenda
     , getAgenda
-    )
-where
+    ) where
+-- Interface to agenda generation, encapsulating options etc.
 
 import Data.Time
 
@@ -18,31 +18,25 @@ import Data.Morgue.Util
 -- | default options: 1 week agenda, output on stdout, ANSI coloring
 defaultOptions :: Options
 defaultOptions = AgendaOptions
-    { optMode    = Both
+    { optMode = Both
     , optDoubleSpaces = False
     , optTags = Nothing
     , optSkipTags = Nothing
     , optNumDays = 6
-    , optOutput  = putStrLn
-    , optFormat  = ANSI
+    , optOutput = putStrLn
+    , optFormat = ANSI
     }
 
 -- | perform computations based on options given
 getAgenda :: Options -> TimeZone -> UTCTime -> String -> String
 getAgenda opts tz time input =
-    let AgendaOptions
-         { optMode = m
-         , optDoubleSpaces = ds
-         , optTags = tags
-         , optSkipTags = skipTags
-         , optNumDays = n
-         , optFormat = format
-         } = opts
-        currentDay = utcToLocalTime tz time
-        days = getFollowingDays currentDay n
-        readerOpts = def { readerParseRaw = False }
-        pandoc = readMarkdown readerOpts $ doubleSpaces ds input
-     in writeAgenda m pandoc days format (tagFilter tags skipTags)
+    writeAgenda optMode pandoc days optFormat (tagFilter optTags optSkipTags)
+    where AgendaOptions{..} = opts
+          currentDay = utcToLocalTime tz time
+          days = getFollowingDays currentDay optNumDays
+          readerOpts = def { readerParseRaw = False }
+          pandoc = readMarkdown readerOpts $ doubleSpaces optDoubleSpaces input
+
 
 -- | output an agenda based on options
 runAgenda :: Options -> String -> IO ()

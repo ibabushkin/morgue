@@ -23,9 +23,9 @@ defaultOptions = OutlineOptions
 -- | perform computations to generate an outline
 getOutline :: Options -> String -> String
 getOutline OutlineOptions{optOutput = output , optFormat = format} input = 
-    let readerOpts = def { readerParseRaw = False }
-        pandoc = readMarkdown readerOpts input
-     in writeOutline pandoc format
+    writeOutline pandoc format
+    where readerOpts = def { readerParseRaw = False }
+          pandoc = readMarkdown readerOpts input
 
 -- | output an outline based on options
 runOutline :: Options -> String -> IO ()

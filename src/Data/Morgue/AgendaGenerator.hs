@@ -20,24 +20,33 @@ import Data.Morgue.Format
 type Tag = String
 
 -- | The kind of Timing selected for an `AgendaElement`
-data TimeMode = Time | Deadline | Scheduled
+data TimeMode
+    = Time
+    | Deadline
+    | Scheduled
     deriving (Show, Read, Eq)
 
 -- | A time step for reoccuring events
-data TimeStep = Day | Week | Month | Year
+data TimeStep
+    = Day
+    | Week
+    | Month
+    | Year
     deriving (Show, Read, Eq)
 
 -- | A repetition interval for reoccuring events, expressed in `TimeStep`s 
-data RepeatInterval = Interval { numSteps :: Int
-                               , lenSteps :: TimeStep
-                               } deriving (Show, Read, Eq)
+data RepeatInterval = Interval
+    { numSteps :: Int
+    , lenSteps :: TimeStep
+    } deriving (Show, Read, Eq)
 
 -- | A timestamp as defined in a markdown file
-data Timestamp = Timestamp { timeValue :: LocalTime
-                           , mode :: TimeMode
-                           , repeat :: Maybe RepeatInterval
-                           , toPrint :: Bool
-                           } deriving (Show, Read, Eq)
+data Timestamp = Timestamp
+    { timeValue :: LocalTime
+    , mode :: TimeMode
+    , repeat :: Maybe RepeatInterval
+    , toPrint :: Bool
+    } deriving (Show, Read, Eq)
 
 instance Ord Timestamp where
     (<=) (Timestamp a _ _ _) (Timestamp b _ _ _) = a <= b
@@ -66,17 +75,22 @@ getNextTime ts@(Timestamp t _ (Just (Interval n l)) _)
           step = toInteger n
 
 -- | the data type used to hold an element of an agenda  
-data AgendaElement = Elem { description :: String
-                          , toDo :: Maybe Bool
-                          , time :: Maybe Timestamp
-                          , tags :: [Tag]
-                          } deriving (Show, Read, Eq)
+data AgendaElement = Elem
+    { description :: String
+    , toDo :: Maybe Bool
+    , time :: Maybe Timestamp
+    , tags :: [Tag]
+    } deriving (Show, Read, Eq)
 
 instance Ord AgendaElement where
     (<=) (Elem _ _ a _) (Elem _ _ b _) = a <= b
 
 -- | what kind of agenda do we want?
-data AgendaMode = Timed | Todo | Both deriving (Show, Read, Eq)
+data AgendaMode
+    = Timed
+    | Todo
+    | Both
+    deriving (Show, Read, Eq)
 
 -- | format agenda elements
 show' :: OutputFormat -> AgendaElement -> String
@@ -210,17 +224,17 @@ parseElement is = case parse elementP "source" (formatInlines is) of
 
 -- | AgendaElement parser
 elementP :: Parser AgendaElement
-elementP = do td <- optionMaybe $ checkboxP <* space
-              ts <- optionMaybe $ timestampP <* space
-              de <- unwords <$> many (try $ word <* option ' ' space)
-              tg <- tagsP
-              return $ Elem de td ts tg
+elementP = do
+    td <- optionMaybe $ checkboxP <* space
+    ts <- optionMaybe $ timestampP <* space
+    de <- unwords <$> many (try $ word <* option ' ' space)
+    tg <- tagsP
+    return $ Elem de td ts tg
     where word = (:) <$> noneOf ": " <*> many (noneOf " ")
 
 -- | checkbox parser
 checkboxP :: Parser Bool
-checkboxP = try (string "[ ]" *> pure True) <|>
-    try (string "[x]" *> pure False)
+checkboxP = try (string "[ ]" *> pure True) <|> try (string "[x]" *> pure False)
 
 -- | tags parser
 tagsP :: Parser [Tag]

@@ -6,11 +6,12 @@ import Data.List.Split (splitOn)
 import Text.ParserCombinators.Parsec hiding (newline)
 
 -- an event as saved in the iCal file
-data Event = Event { summary :: String
-                   , dtStart :: String
-                   , location :: String
-                   , categories :: String
-                   } deriving (Show, Eq, Ord)
+data Event = Event
+    { summary :: String
+    , dtStart :: String
+    , location :: String
+    , categories :: String
+    } deriving (Show, Eq, Ord)
                    
 -- show an event as a markdown bullet-point
 eventToMd :: Event -> String
@@ -21,10 +22,11 @@ eventToMd (Event s t l c) = "* " ++ t ++ " "++ s ++ cat ++ ", " ++ l ++ "\n"
 
 -- convert a iCal file to markdown
 convertFile :: FilePath -> IO String
-convertFile p = do result <- parse parseDocument p <$> readFile p
-                   case result of
-                     (Right es) -> return $ concatMap eventToMd es
-                     (Left _) -> return "An error occured!"
+convertFile p = do
+    result <- parse parseDocument p <$> readFile p
+    case result of
+      (Right es) -> return $ concatMap eventToMd es
+      (Left _) -> return "An error occured!"
     where gr e1 e2 = categories e1 == categories e2
 
 -- parse an event

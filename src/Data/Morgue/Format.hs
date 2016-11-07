@@ -10,7 +10,11 @@ import Data.List (isPrefixOf)
 import Text.Pandoc
 
 -- | supported output formats
-data OutputFormat = Plaintext | Pango | ANSI deriving (Show, Read, Eq)
+data OutputFormat
+    = Plaintext
+    | Pango
+    | ANSI
+    deriving (Show, Read, Eq)
 
 -- | format a string
 format :: OutputFormat -> String -> String
@@ -70,10 +74,9 @@ formatInline (Strikeout is) = wrapIn "~~" $ formatInlines is
 formatInline (Superscript is) = "^{" ++ formatInlines is ++ "}"
 formatInline (Subscript is) = "_{" ++ formatInlines is ++ "}"
 formatInline (SmallCaps is) = formatInlines is
-formatInline (Quoted q is) = let q' = if q == DoubleQuote
-                                      then "\""
-                                      else "'"
-                              in wrapIn q' $ formatInlines is 
+formatInline (Quoted q is) = wrapIn (quoteStyle q) (formatInlines is)
+    where quoteStyle DoubleQuote = "\""
+          quoteStyle _ = "'"
 formatInline (Cite _ is) = formatInlines is
 formatInline (Code _ s) = wrapIn "`" s
 formatInline Space = " "
