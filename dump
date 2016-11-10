@@ -1,0 +1,152 @@
+DOCUMENT
+ HEADING 1
+  TEXT "projects"
+  HEADING 2
+   TEXT "astrein"
+   LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+    ITEM
+     PARAGRAPH
+      TEXT "[ ] write other language backends"
+  HEADING 2
+   TEXT "bartender"
+   LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+    ITEM
+     PARAGRAPH
+      TEXT "[ ] fix syncing issues (notify clonejo)"
+     LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+      ITEM
+       PARAGRAPH
+        TEXT "[ ] use a DTrace or eBPF/bcc"
+      ITEM
+       PARAGRAPH
+        TEXT "maybe just use system time and heap-revalidation on entries? (unlikely to work)"
+  HEADING 2
+   TEXT "gardengnomes"
+   LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+    ITEM
+     PARAGRAPH
+      TEXT "[ ] get initial prototype done"
+  HEADING 2
+   TEXT "gabelstaplerwm"
+   LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+    ITEM
+     PARAGRAPH
+      TEXT "[ ] fix minecraft"
+    ITEM
+     PARAGRAPH
+      TEXT "[ ] add more flexible layout switching / tagset editing"
+  HEADING 2
+   TEXT "hapstone"
+   LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+    ITEM
+     PARAGRAPH
+      TEXT "[ ] 9/10 tests... :slow:"
+  HEADING 2
+   TEXT "hweather"
+   LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+    ITEM
+     PARAGRAPH
+      TEXT "[ ] fix bugs occuring recently"
+  HEADING 2
+   TEXT "music downloader"
+   LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+    ITEM
+     PARAGRAPH
+      TEXT "[ ] fix bugs on occasion :slow:"
+    ITEM
+     PARAGRAPH
+      TEXT "[ ] add ranges when needed :slow:"
+ HEADING 1
+  TEXT "haskell"
+  LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+   ITEM
+    PARAGRAPH
+     TEXT "[ ] implement the "
+     CODE "State"
+     TEXT " monad yourself"
+ HEADING 1
+  TEXT "wargames"
+  HEADING 2
+   TEXT "IO"
+   LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+    ITEM
+     PARAGRAPH
+      TEXT "crack those hashes (use HashClash)"
+ HEADING 1
+  TEXT "birthdays and stuff"
+  LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+   ITEM
+    PARAGRAPH
+     TEXT "T[03.04.2016/+1y] Dad"
+   ITEM
+    PARAGRAPH
+     TEXT "T[27.04.2016/+1y] Mom"
+   ITEM
+    PARAGRAPH
+     TEXT "T[21.12.2015/+1y] Grandpa"
+   ITEM
+    PARAGRAPH
+     TEXT "T[21.06.2016/+1y] Me"
+   ITEM
+    PARAGRAPH
+     TEXT "T[21.10.2015/+1y] Dario"
+    LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+     ITEM
+      PARAGRAPH
+       TEXT "[ ] get a present for Dario (we're late)"
+   ITEM
+    PARAGRAPH
+     TEXT "T[16.04.2016/+1y] David"
+ HEADING 1
+  TEXT "netz AG"
+  LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+   ITEM
+    PARAGRAPH
+     TEXT "T[18.11.2015:20:00/+1w] NAG Sprechstunde"
+ HEADING 1
+  TEXT "system"
+  LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+   ITEM
+    PARAGRAPH
+     TEXT "[ ] get hibernation working (again) :pending:"
+   ITEM
+    PARAGRAPH
+     TEXT "[ ] switch to OpenRC (or abandon Arch altogether) :pending:"
+   ITEM
+    PARAGRAPH
+     TEXT "[ ] fix dunst"
+    LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+     ITEM
+      PARAGRAPH
+       TEXT "[ ] try different driver or different cairo apps"
+ HEADING 1
+  TEXT "university"
+  LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+   ITEM
+    PARAGRAPH
+     TEXT "D[03.11.2016:10:00/+1w] BuK homework"
+   ITEM
+    PARAGRAPH
+     TEXT "D[03.11.2016:17:00/+1w] SWT homework"
+   ITEM
+    PARAGRAPH
+     TEXT "D[04.11.2016:12:00/+1w] NumRech homework"
+ HEADING 1
+  TEXT "work"
+  LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+   ITEM
+    PARAGRAPH
+     TEXT "[ ] implement proper dispatchers"
+   ITEM
+    PARAGRAPH
+     TEXT "[ ] call convention"
+   ITEM
+    PARAGRAPH
+     TEXT "T[01.12.2016/+1m] register paycheck with hledger"
+ HEADING 1
+  TEXT "dorm"
+  LIST (ListAttributes {listType = BULLET_LIST, listTight = True, listStart = 1, listDelim = PERIOD_DELIM})
+   ITEM
+    PARAGRAPH
+     TEXT "[ ] D[30.11.2016] get the fscking Studienbescheiningung"
+
