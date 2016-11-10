@@ -16,13 +16,13 @@ indent k = pack (replicate k ' ')
 
 dump :: Int -> Node -> Text
 dump k (Node _ nType ns) =
-    indent k <> pack (show nType) <> "\n" <> mconcat (map (dump (k+1)) ns)
+    indent k <> pack (show nType) <> "\n" <> mconcat (map (dump (k + 1)) ns)
 
 dumpOwn :: Int -> AgendaTree Text -> Text
 dumpOwn k (AgendaElement t ns) =
-    indent k <> "elem: " <> t <> "\n" <> mconcat (map (dumpOwn (k+1)) ns)
+    indent k <> "elem: " <> t <> "\n" <> mconcat (map (dumpOwn (k + 1)) ns)
 dumpOwn k (AgendaList ns) = 
-    indent k <> "list: \n" <> mconcat (map (dumpOwn (k+1)) ns)
+    indent k <> "list: \n" <> mconcat (map (dumpOwn (k + 1)) ns)
 
 getFileName :: IO FilePath
 getFileName = do

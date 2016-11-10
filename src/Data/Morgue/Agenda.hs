@@ -37,7 +37,7 @@ restoreHierarchy :: Node -> Node
 restoreHierarchy = restoreHierarchy' 1
 
 getAgendaTree :: Node -> Maybe (AgendaTree Text)
-getAgendaTree (Node _ DOCUMENT ns) = Just . AgendaList $ mapMaybe getAgendaListElem ns
+getAgendaTree (Node _ DOCUMENT ns) = Just . AgendaList $ mapMaybe getAgendaTree ns
 getAgendaTree (Node _ (LIST _) ns) = Just . AgendaList $ mapMaybe getAgendaListElem ns
 getAgendaTree (Node _ (HEADING _) (Node _ (TEXT t) [] : ns)) =
     Just . AgendaElement t $ mapMaybe getAgendaTree ns
