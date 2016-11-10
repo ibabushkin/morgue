@@ -26,11 +26,11 @@ library
                        --Data.Morgue.Util,
                        --Data.Morgue.Format
   hs-source-dirs:      src
-  build-depends:       base >= 4.8,
+  build-depends:       attoparsec >= 0.13.1.0,
+                       base >= 4.9, 
                        cmark >= 0.5.3.1,
                        text >= 1.2.2.1,
                        time >= 1.5.0.0
-                       --pandoc >= 1.18,
                        --parsec >= 3.1.9,
                        --old-locale >= 1.0.0,
                        --split >= 0.2.0,
@@ -44,7 +44,8 @@ executable morgue-dump
   main-is:          Data/Morgue/DumpNode.hs
   other-modules:    Data.Morgue.Agenda,
                     Data.Morgue.AgendaTypes
-  build-depends:    base >= 4.8.0,
+  build-depends:    attoparsec >= 0.13.1.0,
+                    base >= 4.9,
                     cmark >= 0.5.3.1,
                     morgue,
                     text >= 1.2.2.1,
@@ -59,7 +60,7 @@ executable morgue-dump
 --                       --Data.Morgue.AgendaGenerator,
 --                       --Data.Morgue.Util,
 --                       --Data.Morgue.Format
---  build-depends:       base >= 4.8.0
+--  build-depends:       base >= 4.8
 --                       --time >= 1.5.0.0,
 --                       --pandoc >= 1.15.0,
 --                       --parsec >= 3.1.9,
@@ -79,7 +80,7 @@ executable morgue-dump
 --                     Data.Morgue.AgendaGenerator,
 --                     Data.Morgue.Util,
 --                     Data.Morgue.Format
---  build-depends:     base >= 4.8.0
+--  build-depends:     base >= 4.8
 --                     time >= 1.5.0.0,
 --                     pandoc >= 1.15.0,
 --                     parsec >= 3.1.9,
