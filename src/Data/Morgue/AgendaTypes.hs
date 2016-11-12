@@ -6,14 +6,14 @@ import Data.Time.LocalTime (LocalTime)
 
 -- | tags are just text values "attached" to agenda elements
 newtype Tag = Tag Text
-    deriving Eq
+    deriving (Show, Eq)
 
 -- | the kind of timing selected for an agenda element
 data TimeMode
     = Time
     | Deadline
     | Scheduled
-    deriving Eq
+    deriving (Show, Eq)
 
 -- | a time step for reoccuring events
 data TimeStep
@@ -21,13 +21,13 @@ data TimeStep
     | Week
     | Month
     | Year
-    deriving Eq
+    deriving (Show, Eq)
 
 -- | a repetition interval for reoccuring events, expressed in terms of a time step
 data RepeatInterval = Interval
     { numSteps :: Int
     , lenSteps :: TimeStep
-    } deriving Eq
+    } deriving (Show, Eq)
 
 -- | a timestamp as defined in a markdown file
 data Timestamp = Timestamp
@@ -35,7 +35,7 @@ data Timestamp = Timestamp
     , mode :: TimeMode
     , repeat :: Maybe RepeatInterval
     , toPrint :: Bool
-    } deriving Eq
+    } deriving (Show, Eq)
 
 instance Ord Timestamp where
     (<=) (Timestamp a _ _ _) (Timestamp b _ _ _) = a <= b
@@ -46,7 +46,7 @@ data AgendaElement = Elem
     , toDo :: Maybe Bool
     , time :: Maybe Timestamp
     , tags :: [Tag]
-    } deriving Eq
+    } deriving (Show, Eq)
 
 instance Ord AgendaElement where
     (<=) (Elem _ _ a _) (Elem _ _ b _) = a <= b
@@ -56,7 +56,7 @@ data AgendaMode
     = Timed
     | Todo
     | Both
-    deriving Eq
+    deriving (Show, Eq)
 
 -- | a filter used for tags
 type Filter = [AgendaElement] -> [AgendaElement]

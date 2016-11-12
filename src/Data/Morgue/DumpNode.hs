@@ -21,11 +21,15 @@ dump k (Node _ nType ns) =
     indent k <> pack (show nType) <> "\n" <> mconcat (map (dump (k + 1)) ns)
 
 -- | dump our own, agenda specific AST
-dumpOwn :: Int -> AgendaTree Text -> Text
+dumpOwn :: Int -> AgendaTree AgendaElement -> Text
 dumpOwn k (AgendaElement t ns) =
-    indent k <> "elem: " <> t <> "\n" <> mconcat (map (dumpOwn (k + 1)) ns)
-dumpOwn k (AgendaList ns) = 
-    indent k <> "list: \n" <> mconcat (map (dumpOwn (k + 1)) ns)
+    indent k <> "elem: " <> repr t <> "\n" <> mconcat (map (dumpOwn (k + 1)) ns)
+    where repr (Elem d to _ _) = reprT to <> d
+          reprT (Just to)
+              | to = "[ ] "
+              | otherwise = "[x] "
+          reprT _ = ""
+dumpOwn k (AgendaList ns) = mconcat (map (dumpOwn (k + 1)) ns)
 
 -- | get a file name from the command line
 getFileName :: IO FilePath
