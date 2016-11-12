@@ -21,7 +21,7 @@ dump k (Node _ nType ns) =
     indent k <> pack (show nType) <> "\n" <> mconcat (map (dump (k + 1)) ns)
 
 -- | dump our own, agenda specific AST
-dumpOwn :: Int -> AgendaTree AgendaElement -> Text
+dumpOwn :: Int -> AgendaTree -> Text
 dumpOwn k (AgendaElement t ns) =
     indent k <> "elem: " <> repr t <> "\n" <> mconcat (map (dumpOwn (k + 1)) ns)
     where repr (Elem d to _ _) = reprT to <> d

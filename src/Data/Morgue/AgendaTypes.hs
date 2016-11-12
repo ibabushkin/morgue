@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveFunctor #-}
 module Data.Morgue.AgendaTypes where
 
 import Data.Text (Text)
@@ -58,11 +57,7 @@ data AgendaMode
     | Both
     deriving (Show, Eq)
 
--- | a filter used for tags
-type Filter = [AgendaElement] -> [AgendaElement]
-
 -- | a tree of hierarchically ordered agenda elements of any type
-data AgendaTree a
-    = AgendaElement a [AgendaTree a]
-    | AgendaList [AgendaTree a]
-    deriving Functor
+data AgendaTree
+    = AgendaElement AgendaElement [AgendaTree]
+    | AgendaList [AgendaTree]
