@@ -19,6 +19,7 @@ flag documentation
 library
   exposed-modules:     Data.Morgue.Agenda,
                        Data.Morgue.Agenda.Generator,
+                       Data.Morgue.Agenda.Time,
                        Data.Morgue.Agenda.Types
                        --Data.Morgue.Options,
                        --Data.Morgue.Util,
@@ -28,7 +29,7 @@ library
                        base >= 4.9, 
                        cmark >= 0.5.3.1,
                        text >= 1.2.2.1,
-                       time >= 1.5.0.0
+                       time >= 1.6.0.0
                        --parsec >= 3.1.9,
                        --old-locale >= 1.0.0,
                        --split >= 0.2.0,
@@ -47,7 +48,7 @@ executable morgue-dump
                     cmark >= 0.5.3.1,
                     morgue,
                     text >= 1.2.2.1,
-                    time >= 1.5.0.0
+                    time >= 1.6.0.0
   hs-source-dirs:   src
   ghc-options:      -Wall
   default-language: Haskell2010

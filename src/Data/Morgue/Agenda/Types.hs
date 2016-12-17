@@ -24,7 +24,7 @@ data TimeStep
 
 -- | a repetition interval for reoccuring events, expressed in terms of a time step
 data RepeatInterval = Interval
-    { numSteps :: Int
+    { numSteps :: Integer
     , lenSteps :: TimeStep
     } deriving (Show, Eq)
 
