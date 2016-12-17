@@ -20,6 +20,7 @@ getNext ts@(Timestamp (LocalTime day tod) _ (Just (Interval n l)) _) =
           addSteps Month = addGregorianMonthsRollOver n
           addSteps Year = addGregorianYearsRollOver n
 
+-- | extract the day from a timestamp
 getDay :: Timestamp -> Day
 getDay (Timestamp (LocalTime day _) _ _ _) = day
 
