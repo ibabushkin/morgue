@@ -1,4 +1,4 @@
-module Data.Morgue.AgendaTypes where
+module Data.Morgue.Agenda.Types where
 
 import Data.Text (Text)
 import Data.Time.LocalTime (LocalTime)

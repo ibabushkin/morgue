@@ -5,7 +5,7 @@ import CMark (Node(..))
 
 import Data.Monoid ((<>))
 import Data.Morgue.Agenda
-import Data.Morgue.AgendaTypes
+import Data.Morgue.Agenda.Types
 import Data.Text (Text, pack)
 import qualified Data.Text.IO as TIO
 

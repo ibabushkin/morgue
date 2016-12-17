@@ -8,7 +8,7 @@ import Control.Monad (mzero)
 
 import Data.Attoparsec.Text
 import Data.Maybe (fromMaybe, mapMaybe)
-import Data.Morgue.AgendaTypes
+import Data.Morgue.Agenda.Types
 import Data.Text (Text)
 import Data.Time (LocalTime, defaultTimeLocale)
 import Data.Time.Format (parseTimeM)
