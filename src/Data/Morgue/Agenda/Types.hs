@@ -61,3 +61,4 @@ data AgendaMode
 data AgendaTree
     = AgendaElement AgendaElement [AgendaTree]
     | AgendaList [AgendaTree]
+    deriving (Show, Eq)

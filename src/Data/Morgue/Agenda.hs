@@ -10,6 +10,7 @@ import Data.Attoparsec.Text
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Morgue.Agenda.Types
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time (LocalTime, defaultTimeLocale)
 import Data.Time.Format (parseTimeM)
 
@@ -23,7 +24,7 @@ parseMarkdown = commonmarkToNode commonmarkOptions
 
 -- | get a textual representation of a markdown AST segment
 formatMarkdown :: Node -> Text
-formatMarkdown = nodeToCommonmark commonmarkOptions Nothing
+formatMarkdown = T.filter (/= '\\') . nodeToCommonmark commonmarkOptions Nothing
 
 -- | restructure the AST to make it... easier to process
 splitByHeading :: Level -> [Node] -> [[Node]]
