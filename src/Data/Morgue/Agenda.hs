@@ -1,5 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Data.Morgue.Agenda where
+module Data.Morgue.Agenda
+    ( parseMarkdown
+    , restoreHierarchy
+    , getAgendaTree
+    ) where
 
 import CMark
 
@@ -57,6 +61,7 @@ getAgendaTree (Node _ (HEADING _) (Node _ (TEXT t) [] : ns)) =
     AgendaTree <$> parseElement t <*> getGrandchildren ns
 getAgendaTree _ = Nothing
 
+-- | get the children of a node as `AgendaTree`s
 getChildren :: Node -> [AgendaTree]
 getChildren (Node _ (LIST _) ns) = mapMaybe getAgendaTree ns
 getChildren (Node _ _ ns) = foldr go [] ns
@@ -64,6 +69,7 @@ getChildren (Node _ _ ns) = foldr go [] ns
                       Just t -> t : ts
                       Nothing -> getChildren n ++ ts
 
+-- | get the grandchildren as `AgendaTree`s, given the list of child nodes
 getGrandchildren :: Applicative f => [Node] -> f [AgendaTree]
 getGrandchildren = pure . concatMap getChildren
 
