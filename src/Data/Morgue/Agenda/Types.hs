@@ -58,7 +58,5 @@ data AgendaMode
     deriving (Show, Eq)
 
 -- | a tree of hierarchically ordered agenda elements of any type
-data AgendaTree
-    = AgendaElement AgendaElement [AgendaTree]
-    | AgendaList [AgendaTree]
+data AgendaTree = AgendaTree (Maybe AgendaElement) [AgendaTree]
     deriving (Show, Eq)

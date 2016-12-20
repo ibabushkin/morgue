@@ -48,16 +48,18 @@ restoreHierarchy = go 1
 
 -- | get a specialized agenda-focused AST from the markdown AST
 getAgendaTree :: Node -> Maybe AgendaTree
-getAgendaTree (Node _ DOCUMENT ns) = Just . AgendaList $ mapMaybe getAgendaTree ns
-getAgendaTree (Node _ (LIST _) ns) = Just . AgendaList $ mapMaybe getAgendaListElem ns
+getAgendaTree (Node _ DOCUMENT ns) =
+    Just . AgendaTree Nothing $ mapMaybe getAgendaTree ns
+getAgendaTree (Node _ (LIST _) ns) =
+    Just . AgendaTree Nothing $ mapMaybe getAgendaListElem ns
 getAgendaTree (Node _ (HEADING _) (Node _ (TEXT t) [] : ns)) =
-    AgendaElement <$> parseElement t <*> pure (mapMaybe getAgendaTree ns)
+    Just $ AgendaTree (parseElement t) (mapMaybe getAgendaTree ns)
 getAgendaTree _ = Nothing
 
 -- | get a list of elements from a markdown AST node
 getAgendaListElem :: Node -> Maybe AgendaTree
-getAgendaListElem (Node _ ITEM (Node _ PARAGRAPH ps : ns)) = AgendaElement <$>
-    parseElement (getParagraphText ps) <*> pure (mapMaybe getAgendaTree ns)
+getAgendaListElem (Node _ ITEM (Node _ PARAGRAPH ps : ns)) =
+    Just $ AgendaTree  (parseElement $ getParagraphText ps) (mapMaybe getAgendaTree ns)
 getAgendaListElem _ = Nothing
 
 -- | get the text from a paragraph
