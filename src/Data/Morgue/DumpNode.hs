@@ -3,10 +3,11 @@ module Main where
 
 import CMark (Node(..))
 
+import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
 import Data.Morgue.Agenda
 import Data.Morgue.Agenda.Types
-import Data.Text (Text, pack)
+import Data.Text (Text, pack, stripSuffix)
 import qualified Data.Text.IO as TIO
 
 import System.Environment (getArgs)
@@ -22,14 +23,18 @@ dump k (Node _ nType ns) =
 
 -- | dump our own, agenda specific AST
 dumpOwn :: Int -> AgendaTree -> Text
-dumpOwn k (AgendaTree (Just t) ns) =
+dumpOwn k (AgendaTree t []) = indent k <> "elem: " <> repr t <> "\n"
+dumpOwn k (AgendaTree t ns) =
     indent k <> "elem: " <> repr t <> "\n" <> mconcat (map (dumpOwn (k + 1)) ns)
-    where repr (Elem d to _ _) = reprT to <> d
-          reprT (Just to)
-              | to = "[ ] "
-              | otherwise = "[x] "
-          reprT _ = ""
-dumpOwn k (AgendaTree Nothing ns) = mconcat (map (dumpOwn (k + 1)) ns)
+
+-- | render an `AgendaElement`
+repr :: AgendaElement -> Text
+repr (Elem d to _ _) = reprT <> fromMaybe d (stripSuffix "\n" d)
+    where reprT = case to of
+                    Just t
+                        | t -> "[ ] "
+                        | otherwise -> "[x] "
+                    Nothing -> ""
 
 -- | get a file name from the command line
 getFileName :: IO FilePath

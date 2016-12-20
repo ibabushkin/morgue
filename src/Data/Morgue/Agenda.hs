@@ -48,19 +48,24 @@ restoreHierarchy = go 1
 
 -- | get a specialized agenda-focused AST from the markdown AST
 getAgendaTree :: Node -> Maybe AgendaTree
-getAgendaTree (Node _ DOCUMENT ns) =
-    Just . AgendaTree Nothing $ mapMaybe getAgendaTree ns
-getAgendaTree (Node _ (LIST _) ns) =
-    Just . AgendaTree Nothing $ mapMaybe getAgendaListElem ns
+getAgendaTree n@(Node _ DOCUMENT _) =
+    Just $ AgendaTree rootNode (getChildren n)
+    where rootNode = Elem "root" Nothing Nothing []
+getAgendaTree (Node _ ITEM (Node _ PARAGRAPH ps : ns)) =
+    AgendaTree <$> parseElement (getParagraphText ps) <*> getGrandchildren ns
 getAgendaTree (Node _ (HEADING _) (Node _ (TEXT t) [] : ns)) =
-    Just $ AgendaTree (parseElement t) (mapMaybe getAgendaTree ns)
+    AgendaTree <$> parseElement t <*> getGrandchildren ns
 getAgendaTree _ = Nothing
 
--- | get a list of elements from a markdown AST node
-getAgendaListElem :: Node -> Maybe AgendaTree
-getAgendaListElem (Node _ ITEM (Node _ PARAGRAPH ps : ns)) =
-    Just $ AgendaTree  (parseElement $ getParagraphText ps) (mapMaybe getAgendaTree ns)
-getAgendaListElem _ = Nothing
+getChildren :: Node -> [AgendaTree]
+getChildren (Node _ (LIST _) ns) = mapMaybe getAgendaTree ns
+getChildren (Node _ _ ns) = foldr go [] ns
+    where go n ts = case getAgendaTree n of
+                      Just t -> t : ts
+                      Nothing -> getChildren n ++ ts
+
+getGrandchildren :: Applicative f => [Node] -> f [AgendaTree]
+getGrandchildren = pure . concatMap getChildren
 
 -- | get the text from a paragraph
 getParagraphText :: [Node] -> Text
