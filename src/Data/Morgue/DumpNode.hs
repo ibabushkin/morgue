@@ -30,9 +30,13 @@ dumpOwn k (AgendaTree t ns) =
 
 -- | render an `AgendaElement`
 repr :: AgendaElement -> Text
-repr (Elem d (Just tD) _ _) = reprT <> fromMaybe d (stripSuffix "\n" d)
+repr (Elem d (Just tD) _ _) = reprT <> stripNewline d
     where reprT = if tD then "[ ] " else "[x] "
-repr (Elem d Nothing _ _) = fromMaybe d (stripSuffix "\n" d)
+repr (Elem d Nothing _ _) = stripNewline d
+
+-- | strip the trailing newline from a `Text`, if there is any
+stripNewline :: Text -> Text
+stripNewline = fromMaybe <$> id <*> stripSuffix "\n"
 
 -- | get a file name from the command line
 getFileName :: IO FilePath
@@ -42,8 +46,8 @@ getFileName = do
       f : _ -> return f
       _ -> error "no file specified"
 
--- | glue everything together
+-- | glue everything together (we use the guarantee that our tree dump ends with a newline)
 main :: IO ()
 main = getFileName >>= TIO.readFile >>=
-    TIO.putStrLn . maybe "tree transform failed" (dumpOwn 0) . pipeline
+    TIO.putStr . maybe "tree transform failed" (dumpOwn 0) . pipeline
     where pipeline = getAgendaTree . restoreHierarchy . parseMarkdown
