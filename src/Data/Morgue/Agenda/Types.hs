@@ -60,3 +60,11 @@ data AgendaMode
 -- | a tree of hierarchically ordered agenda elements of any type
 data AgendaTree = AgendaTree AgendaElement [AgendaTree]
     deriving (Show, Eq)
+
+-- | the result type represnting an action to take when walking an `AgendaTree`
+data AgendaTreeFilter
+    = KeepTree -- ^ keep the complete current tree, with no further checks
+    | DropTree -- ^ drop the complete current tree, with no further checks
+    | KeepTreeAndWalk -- ^ keep the current node, but check subtrees
+    | DropTreeAndWalk -- ^ drop the current node, but check subtrees
+    deriving (Show, Eq)

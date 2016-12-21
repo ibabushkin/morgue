@@ -30,8 +30,9 @@ dumpOwn k (AgendaTree t ns) =
 
 -- | render an `AgendaElement`
 repr :: AgendaElement -> Text
-repr (Elem d (Just tD) _ _) = reprT <> stripNewline d
-    where reprT = if tD then "[ ] " else "[x] "
+repr (Elem d (Just todo) _ _)
+    | todo = "[ ] " <> stripNewline d
+    | otherwise = "[x] " <> stripNewline d
 repr (Elem d Nothing _ _) = stripNewline d
 
 -- | strip the trailing newline from a `Text`, if there is any
