@@ -1,8 +1,16 @@
-module Data.Morgue.Agenda.Time where
+module Data.Morgue.Agenda.Time
+    ( consecutiveDays
+    , getNext
+    , getDay
+    , isOverdue
+    , isRelevant
+    , module Calendar
+    , module LocalTime
+    ) where
 
 import Data.Morgue.Agenda.Types
-import Data.Time.Calendar
-import Data.Time.LocalTime
+import Data.Time.Calendar as Calendar
+import Data.Time.LocalTime as LocalTime
 
 -- | get a list of n consecutive points in time, each one day apart,
 -- starting from the given day

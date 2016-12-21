@@ -3,7 +3,7 @@ module Data.Morgue.Agenda.Generator where
 
 import Data.List (intersect)
 -- import Data.Text (Text)
--- import Data.Morgue.Agenda.Time
+import Data.Morgue.Agenda.Time
 import Data.Morgue.Agenda.Types
 
 -- | filter an agenda tree by dropping nodes not matched by the passed function
@@ -26,3 +26,16 @@ agendaTreeFilterNotTagged :: [Tag] -> AgendaElement -> AgendaTreeFilter
 agendaTreeFilterNotTagged forbidden (Elem _ _ _ ts)
     | not . null $ forbidden `intersect` ts = DropTree
     | otherwise = KeepTreeAndWalk
+
+-- | a filter to be used to filter for subtrees denoting todo elements
+agendaTreeFilterTodo :: Bool -> AgendaElement -> AgendaTreeFilter
+agendaTreeFilterTodo _ (Elem _ Nothing _ _) = DropTreeAndWalk
+agendaTreeFilterTodo showDone (Elem _ (Just todo) _ _)
+    | todo || showDone = KeepTree
+    | otherwise = DropTreeAndWalk
+
+-- | a filter to be used to filter for subtrees denoting elements relevant on a given day
+agendaTreeFilterTimed :: Bool -> Day -> AgendaElement -> AgendaTreeFilter
+agendaTreeFilterTimed showOverdue day element
+    | isRelevant day element || showOverdue = KeepTree
+    | otherwise = DropTreeAndWalk
