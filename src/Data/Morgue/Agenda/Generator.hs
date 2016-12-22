@@ -2,7 +2,6 @@
 module Data.Morgue.Agenda.Generator where
 
 import Data.List (intersect)
--- import Data.Text (Text)
 import Data.Maybe (mapMaybe)
 import Data.Morgue.Agenda.Time
 import Data.Morgue.Agenda.Types
@@ -13,10 +12,12 @@ filterAgendaTree func tree@(AgendaTree e subTrees) =
     case func e of
       KeepTree -> Just tree
       DropTree -> Nothing
-      KeepTreeAndWalk -> Just $ AgendaTree e (mapMaybe (filterAgendaTree func) subTrees)
-      DropTreeAndWalk -> case mapMaybe (filterAgendaTree func) subTrees of
-                           [] -> Nothing
-                           children -> Just (AgendaTree e children)
+      KeepTreeAndWalk ->
+          Just $ AgendaTree e (mapMaybe (filterAgendaTree func) subTrees)
+      DropTreeAndWalk ->
+          case mapMaybe (filterAgendaTree func) subTrees of
+            [] -> Nothing
+            children -> Just (AgendaTree e children)
 
 -- | a filter to be used to filter for subtrees tagged with certain tags
 agendaTreeFilterTagged :: [Tag] -> AgendaElement -> AgendaTreeFilter

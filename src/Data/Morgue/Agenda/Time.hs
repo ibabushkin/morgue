@@ -1,5 +1,6 @@
 module Data.Morgue.Agenda.Time
-    ( consecutiveDays
+    ( getCurrentDay
+    , consecutiveDays
     , getNext
     , getDay
     , isOverdue
@@ -11,6 +12,11 @@ module Data.Morgue.Agenda.Time
 import Data.Morgue.Agenda.Types
 import Data.Time.Calendar as Calendar
 import Data.Time.LocalTime as LocalTime
+
+-- | get the current Day
+getCurrentDay :: IO Day
+getCurrentDay = extractDay <$> getZonedTime
+    where extractDay (ZonedTime (LocalTime day _) _) = day
 
 -- | get a list of n consecutive points in time, each one day apart,
 -- starting from the given day
