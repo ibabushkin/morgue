@@ -1,9 +1,16 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Data.Morgue.Options where
 
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import qualified Data.Text.IO as TIO
+import Data.Monoid ((<>))
 import Data.Morgue.Agenda.Time (getCurrentDay)
 import Data.Morgue.Agenda.Types
+
+import System.Console.GetOpt
+import System.Environment (getArgs, getProgName)
+import System.Exit (exitSuccess)
+import System.IO (stderr)
 
 -- | the format to be used when outputting a filtered tree
 data OutputFormat
@@ -31,3 +38,29 @@ data Options = Options
 defaultOptions :: IO Options
 defaultOptions = constructOptions <$> getCurrentDay
     where constructOptions day = Options TIO.putStr ANSI (Timed day 6 True) Nothing
+
+-- | build a help header
+helpHeader :: IO String
+helpHeader = formatHeader <$> getProgName
+    where formatHeader prg = prg <> " version 1.0\nUSAGE: " <> prg
+            <> " [OPTION..] file(s)\nOPTIONS:"
+
+-- | options to be registered with GetOpt
+options :: [ OptDescr (Options -> IO Options) ]
+options =
+    [ Option "h" ["help"]
+        (NoArg (\_ -> do
+            helpHeader >>= TIO.hPutStrLn stderr . pack . flip usageInfo options
+            exitSuccess
+        ))
+        "Show this help."
+    ]
+
+runWithOptions :: IO ()
+runWithOptions = do
+    -- handle args
+    args <- getArgs
+    let (actions, files, _) = getOpt RequireOrder options args
+    opts <- foldl (>>=) defaultOptions actions
+    -- TODO: concat <$> mapM TIO.readFile files >>= runAgenda opts
+    return ()
