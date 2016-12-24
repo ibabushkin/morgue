@@ -4,15 +4,19 @@ module Data.Morgue.Options ( run ) where
 
 import Data.Foldable (foldl')
 import Data.Text (Text, pack)
+import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
+import Data.Maybe (fromMaybe, maybe)
 import Data.Monoid ((<>))
-import Data.Morgue.Agenda.Time (getCurrentDay)
+import Data.Morgue.Agenda.Time (getCurrentDay, Day)
 import Data.Morgue.Agenda.Types
 
 import System.Console.GetOpt
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitSuccess)
 import System.IO (stderr)
+
+import Text.Read (readMaybe)
 
 -- | the format to be used when outputting a filtered tree
 data OutputFormat
@@ -27,6 +31,7 @@ data Options
         { optOutput :: Maybe FilePath -- ^ how to output the results
         , optFormat :: OutputFormat -- ^ the output format to use
         , optMode :: AgendaMode -- ^ the agenda mode to use
+        , optDay :: Day -- ^ the starting day of the agenda
         , optTags :: Maybe ([Tag], Bool) -- ^ tags passed to filter the agenda tree
         , optFiles :: [FilePath] -- ^ the files to use as input
         }
@@ -44,7 +49,7 @@ data Options
 -- * no tag filter
 defaultOptions :: IO Options
 defaultOptions = constructOptions <$> getCurrentDay
-    where constructOptions day = RunWith Nothing ANSI (Timed day 6 True) Nothing []
+    where constructOptions day = RunWith Nothing ANSI (Timed 7 True) day Nothing []
 
 -- | get a string representation of the currently running version
 -- TODO: use a quasi-quoter to read our cabal file at compile time.
@@ -69,7 +74,77 @@ options =
         "Show this help."
     , Option "v" ["version"] (NoArg (const Version))
         "Show the morgue version you're using."
+    , Option "m" ["mode"] (ReqArg setMode "MODE")
+        "Desired agenda mode. Possible values are: 'timed', 'todo', 'both',\n\
+        \and 'tree'. Defaults to 'both'.\n\
+        \'timed': An agenda, sorted by days.\n\
+        \'todo': A set of todo entries.\n\
+        \'both': Both of the above.\n\
+        \'tree': The complete document."
+    , Option "n" ["num-days"] (ReqArg setNumDays "NUM")
+        "Number of days to include in the agenda, including today.\n\
+        \Only makes sense to use if you use 'timed' or 'both' mode,\n\
+        \ignored otherwise. Defaults to 7."
+    , Option "t" ["tags"] (ReqArg setTags "TAGS")
+        "Tags to filter elements on. This affects every mode."
+    , Option "i" ["ignore"] (NoArg setIgnore)
+        "Invert the used tag filter, that is, make positive filters\n\
+        \negative and vice-versa. Defaults to a positive filter."
+    , Option "o" ["output"] (ReqArg setOutput "FILE")
+        "File to redirect output to, using stdout if not set."
+    , Option "f" ["format"] (ReqArg setFormat "FORMAT")
+        "Output format to use. Possible values are 'plain', 'colored',\n\
+        \and 'pango'. Defaults to 'colored'."
     ]
+
+-- | set the mode on a set of options
+setMode :: String -> Options -> Options
+setMode "timed" opts@RunWith{..} = opts { optMode = updateMode optMode }
+    where updateMode (Timed n _) = Timed n False
+          updateMode _ = Timed 7 False
+setMode "todo" opts@RunWith{} = opts { optMode = Todo }
+setMode "both" opts@RunWith{..} = opts { optMode = updateMode optMode }
+    where updateMode (Timed n _) = Timed n True
+          updateMode _ = Timed 7 True
+setMode "tree" opts@RunWith{} = opts { optMode = Tree }
+setMode _ opts = opts
+
+-- | set the number of days on a set of options
+setNumDays :: String -> Options -> Options
+setNumDays num opts@RunWith{ optMode = Timed n b } =
+    opts { optMode = Timed (fromMaybe n (readMaybe num)) b }
+setNumDays _ opts = opts
+
+-- | set the tag filter on a set of options
+setTags :: String -> Options -> Options
+setTags tags opts@RunWith{..} = opts { optTags = Just (newTags, bool) }
+    where newTags = map Tag . filter (not . T.null) . T.split (== ':') $ pack tags
+          bool = fromMaybe False (snd <$> optTags)
+setTags _ opts = opts
+
+-- | toggle the tag filter status on a set of options
+setIgnore :: Options -> Options
+setIgnore opts@RunWith{..} = opts { optTags = Just (tags, bool) }
+    where tags = fromMaybe [] (fst <$> optTags)
+          bool = maybe True not (snd <$> optTags)
+setIgnore opts = opts
+
+-- | set the output file on a set of options
+setOutput :: FilePath -> Options -> Options
+setOutput path opts@RunWith{ optOutput = Nothing } = opts { optOutput = Just path }
+setOutput _ opts = opts
+
+-- | set the output format on a set of options
+setFormat :: String -> Options -> Options
+setFormat "plain" opts@RunWith{} = opts { optFormat = Plain }
+setFormat "colored" opts@RunWith{} = opts { optFormat = ANSI }
+setFormat "pango" opts@RunWith{} = opts { optFormat = Pango }
+setFormat _ opts = opts
+
+-- | set the files on a set of options
+setFiles :: [FilePath] -> Options -> Options
+setFiles files opts@RunWith{} = opts { optFiles = files }
+setFiles _ opts = opts
 
 -- | run, parsing options
 run :: IO ()
@@ -78,11 +153,10 @@ run = do
     args <- getArgs
     let (actions, files, _) = getOpt RequireOrder options args
     opts <- foldl' (flip ($)) <$> defaultOptions <*> pure actions
-    runOpts opts { optFiles = files }
-    -- concat <$> mapM TIO.readFile files >>= runAgenda opts
+    runOpts $ setFiles files opts
 
 -- | given some options, take the appropriate action
 runOpts :: Options -> IO ()
-runOpts Help = helpMessage >>= TIO.hPutStrLn stderr >> exitSuccess
+runOpts Help = helpMessage >>= TIO.hPutStr stderr >> exitSuccess
 runOpts Version = versionMessage >>= TIO.hPutStrLn stderr
 runOpts opts@RunWith{..} = print opts

@@ -1,7 +1,6 @@
 module Data.Morgue.Agenda.Types where
 
 import Data.Text (Text)
-import Data.Time.Calendar (Day)
 import Data.Time.LocalTime (LocalTime)
 
 -- | tags are just text values "attached" to agenda elements
@@ -53,7 +52,7 @@ instance Ord AgendaElement where
 
 -- | the kinds of agenda we can get
 data AgendaMode
-    = Timed Day Integer Bool -- ^ a timed agenda
+    = Timed Integer Bool -- ^ a timed agenda
     | Todo -- ^ a simple tree of todo items
     | Tree -- ^ a simple tree of all items
     deriving (Show, Eq)
