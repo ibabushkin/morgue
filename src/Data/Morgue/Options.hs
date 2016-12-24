@@ -6,15 +6,16 @@ import Data.Foldable (foldl')
 import Data.Text (Text, pack)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
-import Data.Maybe (fromMaybe, maybe)
+import Data.Maybe (fromMaybe, maybe, isNothing)
 import Data.Monoid ((<>))
 import Data.Morgue.Agenda.Time (getCurrentDay, Day)
 import Data.Morgue.Agenda.Types
 
 import System.Console.GetOpt
 import System.Environment (getArgs, getProgName)
-import System.Exit (exitSuccess)
+import System.Exit (exitSuccess, exitFailure)
 import System.IO (stderr)
+import System.IO.Error (tryIOError)
 
 import Text.Read (readMaybe)
 
@@ -141,10 +142,13 @@ setFormat "colored" opts@RunWith{} = opts { optFormat = ANSI }
 setFormat "pango" opts@RunWith{} = opts { optFormat = Pango }
 setFormat _ opts = opts
 
--- | set the files on a set of options
-setFiles :: [FilePath] -> Options -> Options
-setFiles files opts@RunWith{} = opts { optFiles = files }
-setFiles _ opts = opts
+-- | get the file contents to work with
+getFileContents :: [FilePath] -> IO (Maybe Text)
+getFileContents files = transform <$> tryIOError (action files)
+    where transform (Right res) = Just res
+          transform (Left _) = Nothing
+          action [] = TIO.getContents
+          action fs = mconcat <$> mapM TIO.readFile fs
 
 -- | run, parsing options
 run :: IO ()
@@ -153,10 +157,14 @@ run = do
     args <- getArgs
     let (actions, files, _) = getOpt RequireOrder options args
     opts <- foldl' (flip ($)) <$> defaultOptions <*> pure actions
-    runOpts $ setFiles files opts
+    runOpts files opts
 
 -- | given some options, take the appropriate action
-runOpts :: Options -> IO ()
-runOpts Help = helpMessage >>= TIO.hPutStr stderr >> exitSuccess
-runOpts Version = versionMessage >>= TIO.hPutStrLn stderr
-runOpts opts@RunWith{..} = print opts
+runOpts :: [FilePath] -> Options -> IO ()
+runOpts _ Help = helpMessage >>= TIO.hPutStr stderr >> exitSuccess
+runOpts _ Version = versionMessage >>= TIO.hPutStrLn stderr
+runOpts files opts@RunWith{..} = do
+    res <- getFileContents files
+    if isNothing res
+       then TIO.hPutStrLn stderr "Can't open file." >> exitFailure
+       else print opts
