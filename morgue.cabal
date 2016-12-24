@@ -1,13 +1,13 @@
 name:                morgue
-version:             0.9.0.0
+version:             1.0.0.0
 synopsis:            markdown org replacement
 description:         A tool to parse markdown files in a specific format and generate agendas, todo-lists etc.
 homepage:            http://www.github.com/ibabushkin/morgue
-license:             GPL-3
+license:             BSD3
 license-file:        LICENSE
 author:              Inokentiy Babushkin
 maintainer:          inokentiy.babushkin@googlemail.com
-copyright:           2015 Inokentiy Babushkin
+copyright:           Copyright: (c) 2015 - 2016 Inokentiy Babushkin
 category:            Data
 build-type:          Simple
 extra-source-files:  README.md
@@ -17,84 +17,58 @@ flag documentation
   default:  False
 
 library
-  exposed-modules:     Data.Morgue.Agenda,
-                       Data.Morgue.Agenda.Generator,
-                       Data.Morgue.Agenda.Time,
-                       Data.Morgue.Agenda.Types,
-                       Data.Morgue.Options
-                       --Data.Morgue.Util,
-                       --Data.Morgue.Format
-  hs-source-dirs:      src
-  build-depends:       attoparsec >= 0.13.1.0,
-                       base >= 4.9, 
-                       cmark >= 0.5.3.1,
-                       text >= 1.2.2.1,
-                       time >= 1.6.0.0
-                       --old-locale >= 1.0.0,
-                       --split >= 0.2.0,
-                       --ansi-terminal >= 0.6.0
-  ghc-options:         -Wall
-  default-language:    Haskell2010
+  hs-source-dirs:    src
+  exposed-modules:   Data.Morgue.Agenda,
+                     Data.Morgue.Agenda.Generator,
+                     Data.Morgue.Agenda.Time,
+                     Data.Morgue.Agenda.Types,
+                     Data.Morgue.Options
+                     --Data.Morgue.Util,
+                     --Data.Morgue.Format
+  build-depends:     attoparsec >= 0.13.1.0,
+                     base >= 4.9, 
+                     cmark >= 0.5.3.1,
+                     text >= 1.2.2.1,
+                     time >= 1.6.0.0
+                     --old-locale >= 1.0.0,
+                     --split >= 0.2.0,
+                     --ansi-terminal >= 0.6.0
+  ghc-options:       -Wall
+  default-language:  Haskell2010
   if flag(documentation)
-      build-depends:   hscolour >= 1.20
+      build-depends: hscolour >= 1.20
 
 executable morgue-dump
-  main-is:          Data/Morgue/DumpNode.hs
-  other-modules:    Data.Morgue.Agenda,
-                    Data.Morgue.Agenda.Types
-  build-depends:    attoparsec >= 0.13.1.0,
-                    base >= 4.9,
-                    cmark >= 0.5.3.1,
-                    morgue,
-                    text >= 1.2.2.1,
-                    time >= 1.6.0.0
-  hs-source-dirs:   src
-  ghc-options:      -Wall
-  default-language: Haskell2010
+  hs-source-dirs:    app
+  main-is:           Dump.hs
+  build-depends:     attoparsec >= 0.13.1.0,
+                     base >= 4.9,
+                     cmark >= 0.5.3.1,
+                     morgue,
+                     text >= 1.2.2.1,
+                     time >= 1.6.0.0
+  ghc-options:       -threaded -rtsopts -with-rtsopts=-N
+  default-language:  Haskell2010
 
---executable morgue
---  main-is:             AgendaMain.hs
---  other-modules:       Data.Morgue.Agenda
---                       --Data.Morgue.AgendaGenerator,
---                       --Data.Morgue.Util,
---                       --Data.Morgue.Format
---  build-depends:       base >= 4.8
---                       --time >= 1.5.0.0,
---                       --pandoc >= 1.15.0,
---                       --parsec >= 3.1.9,
---                       --old-locale >= 1.0.0,
---                       --split >= 0.2.0,
---                       --ansi-terminal >= 0.6.0
---  hs-source-dirs:      src
---  ghc-options:         -Wall
---  default-language:    Haskell2010
-  
---executable morgue-outline
---  main-is:           OutlineMain.hs
---  other-modules:     Data.Morgue.Outline,
---                     Data.Morgue.Options
---                     Data.Morgue.OutlineGenerator
---                     Data.Morgue.Agenda,
---                     Data.Morgue.AgendaGenerator,
---                     Data.Morgue.Util,
---                     Data.Morgue.Format
---  build-depends:     base >= 4.8
---                     time >= 1.5.0.0,
---                     pandoc >= 1.15.0,
---                     parsec >= 3.1.9,
---                     split >= 0.2.0,
---                     ansi-terminal >= 0.6.0
---  hs-source-dirs:    src
---  ghc-options:       -Wall
---  default-language:  Haskell2010
+executable morgue
+  hs-source-dirs:    app
+  main-is:           Main.hs
+  build-depends:     attoparsec >= 0.13.1.0,
+                     base >= 4.9,
+                     cmark >= 0.5.3.1,
+                     morgue,
+                     text >= 1.2.2.1,
+                     time >= 1.6.0.0
+  ghc-options:       -threaded -rtsopts -with-rtsopts=-N
+  default-language:  Haskell2010
 
 test-suite spec
-  default-language:    Haskell2010
-  ghc-options:         -Wall
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             Spec.hs
-  build-depends:       base,
-                       morgue,
-                       hspec,
-                       QuickCheck
+  default-language:  Haskell2010
+  ghc-options:       -Wall -threaded -rtsopts -with-rtsopts=-N
+  type:              exitcode-stdio-1.0
+  hs-source-dirs:    test
+  main-is:           Spec.hs
+  build-depends:     base,
+                     morgue,
+                     hspec,
+                     QuickCheck

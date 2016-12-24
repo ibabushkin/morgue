@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Data.Morgue.Options where
+{-# LANGUAGE RecordWildCards #-}
+module Data.Morgue.Options ( run ) where
 
+import Data.Foldable (foldl')
 import Data.Text (Text, pack)
 import qualified Data.Text.IO as TIO
 import Data.Monoid ((<>))
@@ -20,12 +22,17 @@ data OutputFormat
     deriving (Show, Eq)
 
 -- | the options we parametrize our behaviour over
-data Options = Options
-    { optOutput :: Text -> IO () -- ^ how to output the results
-    , optFormat :: OutputFormat -- ^ the output format to use
-    , optMode :: AgendaMode -- ^ the agenda mode to use
-    , optTags :: Maybe ([Tag], Bool) -- ^ tags passed to filter the agenda tree
-    }
+data Options
+    = RunWith
+        { optOutput :: Maybe FilePath -- ^ how to output the results
+        , optFormat :: OutputFormat -- ^ the output format to use
+        , optMode :: AgendaMode -- ^ the agenda mode to use
+        , optTags :: Maybe ([Tag], Bool) -- ^ tags passed to filter the agenda tree
+        , optFiles :: [FilePath] -- ^ the files to use as input
+        }
+    | Help
+    | Version
+    deriving (Show, Eq)
 
 -- | get the default options (requires current day)
 --
@@ -37,30 +44,45 @@ data Options = Options
 -- * no tag filter
 defaultOptions :: IO Options
 defaultOptions = constructOptions <$> getCurrentDay
-    where constructOptions day = Options TIO.putStr ANSI (Timed day 6 True) Nothing
+    where constructOptions day = RunWith Nothing ANSI (Timed day 6 True) Nothing []
 
--- | build a help header
-helpHeader :: IO String
-helpHeader = formatHeader <$> getProgName
-    where formatHeader prg = prg <> " version 1.0\nUSAGE: " <> prg
+-- | get a string representation of the currently running version
+-- TODO: use a quasi-quoter to read our cabal file at compile time.
+version :: String
+version = "1.0"
+
+-- | build a help message
+helpMessage :: IO Text
+helpMessage = pack . flip usageInfo options . formatHeader <$> getProgName
+    where formatHeader prg = prg <> " version " <> version <> "\nUSAGE: " <> prg
             <> " [OPTION..] file(s)\nOPTIONS:"
 
+-- | build a version message
+versionMessage :: IO Text
+versionMessage = formatHeader <$> getProgName
+    where formatHeader prg = pack prg <> " version " <> pack version
+
 -- | options to be registered with GetOpt
-options :: [ OptDescr (Options -> IO Options) ]
+options :: [OptDescr (Options -> Options)]
 options =
-    [ Option "h" ["help"]
-        (NoArg (\_ -> do
-            helpHeader >>= TIO.hPutStrLn stderr . pack . flip usageInfo options
-            exitSuccess
-        ))
+    [ Option "h" ["help"] (NoArg (const Help))
         "Show this help."
+    , Option "v" ["version"] (NoArg (const Version))
+        "Show the morgue version you're using."
     ]
 
-runWithOptions :: IO ()
-runWithOptions = do
+-- | run, parsing options
+run :: IO ()
+run = do
     -- handle args
     args <- getArgs
     let (actions, files, _) = getOpt RequireOrder options args
-    opts <- foldl (>>=) defaultOptions actions
-    -- TODO: concat <$> mapM TIO.readFile files >>= runAgenda opts
-    return ()
+    opts <- foldl' (flip ($)) <$> defaultOptions <*> pure actions
+    runOpts opts { optFiles = files }
+    -- concat <$> mapM TIO.readFile files >>= runAgenda opts
+
+-- | given some options, take the appropriate action
+runOpts :: Options -> IO ()
+runOpts Help = helpMessage >>= TIO.hPutStrLn stderr >> exitSuccess
+runOpts Version = versionMessage >>= TIO.hPutStrLn stderr
+runOpts opts@RunWith{..} = print opts
