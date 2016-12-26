@@ -2,6 +2,8 @@
 {-# LANGUAGE RecordWildCards #-}
 module Data.Morgue.Options ( run ) where
 
+import Control.Monad (when)
+
 import Data.Foldable (foldl')
 import Data.Text (Text, pack)
 import qualified Data.Text as T
@@ -53,7 +55,6 @@ defaultOptions = constructOptions <$> getCurrentDay
     where constructOptions day = RunWith Nothing ANSI (Timed 7 True) day Nothing []
 
 -- | get a string representation of the currently running version
--- TODO: use a quasi-quoter to read our cabal file at compile time.
 version :: String
 version = "1.0"
 
@@ -165,6 +166,5 @@ runOpts _ Help = helpMessage >>= TIO.hPutStr stderr >> exitSuccess
 runOpts _ Version = versionMessage >>= TIO.hPutStrLn stderr
 runOpts files opts@RunWith{..} = do
     res <- getFileContents files
-    if isNothing res
-       then TIO.hPutStrLn stderr "Can't open file." >> exitFailure
-       else print opts
+    when (isNothing res) $ TIO.hPutStrLn stderr "Can't open file." >> exitFailure
+    print opts
