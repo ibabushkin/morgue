@@ -2,13 +2,14 @@
 {-# LANGUAGE RecordWildCards #-}
 module Data.Morgue.Options ( run ) where
 
+import Control.Exception (displayException)
 import Control.Monad (when)
 
 import Data.Foldable (foldl')
 import Data.Text (Text, pack)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
-import Data.Maybe (fromMaybe, maybe, isNothing)
+import Data.Maybe (fromMaybe, maybe)
 import Data.Monoid ((<>))
 import Data.Morgue.Agenda.Time (getCurrentDay, Day)
 import Data.Morgue.Agenda.Types
@@ -143,13 +144,15 @@ setFormat "colored" opts@RunWith{} = opts { optFormat = ANSI }
 setFormat "pango" opts@RunWith{} = opts { optFormat = Pango }
 setFormat _ opts = opts
 
--- | get the file contents to work with
-getFileContents :: [FilePath] -> IO (Maybe Text)
-getFileContents files = transform <$> tryIOError (action files)
-    where transform (Right res) = Just res
-          transform (Left _) = Nothing
-          action [] = TIO.getContents
-          action fs = mconcat <$> mapM TIO.readFile fs
+-- | get the file contents to work with, including a list of I/O errors
+-- that occured and a flag indicating whether the operation can be considered
+-- sucessful (that is, at least one of the given sources returned data).
+getFileContents :: [FilePath] -> IO ([IOError], Text, Bool)
+getFileContents files = foldr go (mempty, mempty, False) <$> mapM get files
+    where get "-" = tryIOError TIO.getContents
+          get fName = tryIOError (TIO.readFile fName)
+          go (Left e) (es, res, s) = (e:es, res, s)
+          go (Right r) (es, res, _) = (es, r <> res, True)
 
 -- | run, parsing options
 run :: IO ()
@@ -165,6 +168,7 @@ runOpts :: [FilePath] -> Options -> IO ()
 runOpts _ Help = helpMessage >>= TIO.hPutStr stderr >> exitSuccess
 runOpts _ Version = versionMessage >>= TIO.hPutStrLn stderr
 runOpts files opts@RunWith{..} = do
-    res <- getFileContents files
-    when (isNothing res) $ TIO.hPutStrLn stderr "Can't open file." >> exitFailure
+    (errs, contents, status) <- getFileContents files
+    mapM_ (TIO.hPutStrLn stderr . pack . displayException) errs
+    when (not (null errs) && not status) exitFailure
     print opts
