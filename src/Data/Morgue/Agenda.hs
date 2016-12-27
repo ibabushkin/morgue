@@ -141,6 +141,5 @@ repeatP = string "/+" *> (Interval <$> integer <*> timestepP)
 
 -- | parse a set of tags from an agenda entry description
 tagsP :: Parser [Tag]
-tagsP = colon *> sepBy (Tag . pack <$> someTill anyChar (oneOf [':', ' '])) colon <* colon
-    -- TODO: no pack
+tagsP = colon *> sepEndBy1 (Tag . pack <$> some alphaNumChar) colon -- TODO: no pack
     where colon = char ':'
