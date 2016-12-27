@@ -163,7 +163,7 @@ run = do
     opts <- foldl' (flip ($)) <$> defaultOptions <*> pure actions
     runOpts files opts
 
--- | given some options, take the appropriate action
+-- | given some files and options, take the appropriate action
 runOpts :: [FilePath] -> Options -> IO ()
 runOpts _ Help = helpMessage >>= TIO.hPutStr stderr >> exitSuccess
 runOpts _ Version = versionMessage >>= TIO.hPutStrLn stderr
