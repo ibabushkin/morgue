@@ -94,7 +94,7 @@ elementP = do
     td <- optional (checkboxP <* space)
     ts <- optional (timestampP <* space)
     tg <- fromMaybe [] <$> optional (tagsP <* space)
-    de <- pack <$> many anyChar -- TODO: many1 and no pack
+    de <- pack <$> some anyChar -- TODO: no pack
     return $ Elem de td ts tg
 
 -- | parse a checkbox from an agenda entry description
@@ -114,7 +114,7 @@ timestampP :: Parser Timestamp
 timestampP = do
     m <- modeP
     _ <- char '['
-    timestr <- many (noneOf ['/',']']) -- TODO: many1
+    timestr <- some (noneOf ['/',']'])
     r <- optional repeatP
     _ <- char ']'
     case parseTime timestr of
