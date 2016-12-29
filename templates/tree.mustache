@@ -1,4 +1,6 @@
-Document tree:
-{{#entries}}
-{{{desc}}}
-{{/entries}}
+{{#element}}
+{{>element}}
+{{/element}}
+{{#children}}
+{{{indent}}}: {{#element}}{{>element}}{{/element}}
+{{/children}}

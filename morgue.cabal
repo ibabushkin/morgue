@@ -20,16 +20,16 @@ library
   hs-source-dirs:    src
   exposed-modules:   Data.Morgue.Agenda,
                      Data.Morgue.Agenda.Generator,
+                     Data.Morgue.Agenda.Render,
                      Data.Morgue.Agenda.Time,
                      Data.Morgue.Agenda.Types,
                      Data.Morgue.Options
-                     --Data.Morgue.Util,
-                     --Data.Morgue.Format
   --build-depends:     attoparsec >= 0.13.1.0,
   build-depends:     aeson >= 1.0.2.1,
                      base >= 4.9,
                      cmark >= 0.5.3.1,
                      megaparsec >= 5.1,
+                     stache >= 0.2.0,
                      text >= 1.2.2.1,
                      time >= 1.6.0.0
                      --ansi-terminal >= 0.6.0
