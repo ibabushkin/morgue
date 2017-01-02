@@ -4,12 +4,14 @@
 module Data.Morgue.Agenda.Render where
 
 import Data.Aeson
+import Data.Maybe (fromMaybe)
 import Data.Morgue.Agenda.Types
+import Data.Text (stripSuffix)
 import Data.Time.Calendar (Day)
 
 import GHC.Generics
 
-import Text.Mustache (Template)
+import Text.Mustache (Template(..), Node(..))
 import Text.Mustache.Compile.TH
 
 newtype TimedAgendaResult = TimedAgendaResult [(Day, AgendaTree)]
@@ -39,13 +41,19 @@ instance ToJSON TreeAgendaResult where
     toJSON (TreeAgendaResult tree) = object [ "tree" .= toJSON tree ]
 
 timedTemplate :: Template
-timedTemplate = $(compileMustacheDir "timed" "templates/")
+timedTemplate = cleanTemplate $(compileMustacheDir "timed" "templates/")
 
 todoTemplate :: Template
-todoTemplate = $(compileMustacheDir "todo" "templates/")
+todoTemplate = cleanTemplate $(compileMustacheDir "todo" "templates/")
 
 bothTemplate :: Template
-bothTemplate = $(compileMustacheDir "both" "templates/")
+bothTemplate = cleanTemplate $(compileMustacheDir "both" "templates/")
 
 treeTemplate :: Template
-treeTemplate = $(compileMustacheDir "tree" "templates/")
+treeTemplate = cleanTemplate $(compileMustacheDir "tree" "templates/")
+
+cleanTemplate :: Template -> Template
+cleanTemplate (Template a c) = Template a (clean <$> c)
+    where clean = foldr go []
+          go (TextBlock t) [] = [TextBlock $ fromMaybe t (stripSuffix "\n" t)]
+          go n ns = n:ns

@@ -1,6 +1,4 @@
-{{#element}}
-{{>element}}
-{{/element}}
-{{#children}}
-{{{indent}}}: {{#element}}{{>element}}{{/element}}
-{{/children}}
+{{#tree}}
+{{#element}}{{>element}}{{/element}}
+{{#children}}{{#element}}{{{indent}}}: {{>element}}{{/element}}{{/children}}
+{{/tree}}
