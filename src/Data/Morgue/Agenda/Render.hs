@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Data.Morgue.Agenda.Render where
 
 import Data.Aeson
@@ -7,6 +8,9 @@ import Data.Morgue.Agenda.Types
 import Data.Time.Calendar (Day)
 
 import GHC.Generics
+
+import Text.Mustache (Template)
+import Text.Mustache.Compile.TH
 
 newtype TimedAgendaResult = TimedAgendaResult [(Day, AgendaTree)]
 
@@ -33,3 +37,15 @@ newtype TreeAgendaResult = TreeAgendaResult AgendaTree
 
 instance ToJSON TreeAgendaResult where
     toJSON (TreeAgendaResult tree) = object [ "tree" .= toJSON tree ]
+
+timedTemplate :: Template
+timedTemplate = $(compileMustacheDir "timed" "templates/")
+
+todoTemplate :: Template
+todoTemplate = $(compileMustacheDir "todo" "templates/")
+
+bothTemplate :: Template
+bothTemplate = $(compileMustacheDir "both" "templates/")
+
+treeTemplate :: Template
+treeTemplate = $(compileMustacheDir "tree" "templates/")
