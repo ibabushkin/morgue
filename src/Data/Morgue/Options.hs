@@ -27,6 +27,7 @@ data OutputFormat
     = Plain -- ^ plain text. boring, but reliable (and machine-readable)
     | Pango -- ^ pango markup. useful for awesomewm or dunst notifications
     | ANSI  -- ^ colored plain text. not as boring
+    | Custom FilePath -- ^ custom mustache template passed
     deriving (Show, Eq)
 
 -- | the options we parametrize our behaviour over
@@ -97,7 +98,11 @@ options =
         "File to redirect output to, using stdout if not set."
     , Option "f" ["format"] (ReqArg setFormat "FORMAT")
         "Output format to use. Possible values are 'plain', 'colored',\n\
-        \and 'pango'. Defaults to 'colored'."
+        \and 'pango'. Defaults to 'colored'. This overrides any custom\n\
+        \templates specified using -F."
+    , Option "F" ["custom-format"] (ReqArg setCustomFormat "DIRECTORY")
+        "A directory with mustache templates to be used to render the agenda.\n\
+        \This overrides any format specified using -f."
     ]
 
 -- | set the mode on a set of options
@@ -143,6 +148,11 @@ setFormat "plain" opts@RunWith{} = opts { optFormat = Plain }
 setFormat "colored" opts@RunWith{} = opts { optFormat = ANSI }
 setFormat "pango" opts@RunWith{} = opts { optFormat = Pango }
 setFormat _ opts = opts
+
+-- | set the output format to a custom template path on a set of options
+setCustomFormat :: FilePath -> Options -> Options
+setCustomFormat path opts@RunWith{} = opts { optFormat = Custom path }
+setCustomFormat _ opts = opts
 
 -- | get the file contents to work with, including a list of I/O errors
 -- that occured and a flag indicating whether the operation can be considered

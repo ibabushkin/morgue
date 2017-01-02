@@ -40,15 +40,19 @@ newtype TreeAgendaResult = TreeAgendaResult AgendaTree
 instance ToJSON TreeAgendaResult where
     toJSON (TreeAgendaResult tree) = object [ "tree" .= toJSON tree ]
 
+-- | the template to render a timed agenda
 timedTemplate :: Template
 timedTemplate = cleanTemplate $(compileMustacheDir "timed" "templates/")
 
+-- | the template to render a todo agenda
 todoTemplate :: Template
 todoTemplate = timedTemplate { templateActual = "todo" }
 
+-- | the template to render a timed and todo agenda
 bothTemplate :: Template
 bothTemplate = timedTemplate { templateActual = "todo" }
 
+-- | the template to render a tree agenda
 treeTemplate :: Template
 treeTemplate = timedTemplate { templateActual = "tree" }
 
