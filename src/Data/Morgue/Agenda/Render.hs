@@ -44,14 +44,16 @@ timedTemplate :: Template
 timedTemplate = cleanTemplate $(compileMustacheDir "timed" "templates/")
 
 todoTemplate :: Template
-todoTemplate = cleanTemplate $(compileMustacheDir "todo" "templates/")
+todoTemplate = timedTemplate { templateActual = "todo" }
 
 bothTemplate :: Template
-bothTemplate = cleanTemplate $(compileMustacheDir "both" "templates/")
+bothTemplate = timedTemplate { templateActual = "todo" }
 
 treeTemplate :: Template
-treeTemplate = cleanTemplate $(compileMustacheDir "tree" "templates/")
+treeTemplate = timedTemplate { templateActual = "tree" }
 
+-- | "clean" a template - that is, remove trailing newlines that are around because we
+-- read from a file created by a human
 cleanTemplate :: Template -> Template
 cleanTemplate (Template a c) = Template a (clean <$> c)
     where clean = foldr go []
