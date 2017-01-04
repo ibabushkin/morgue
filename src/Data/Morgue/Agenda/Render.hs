@@ -63,3 +63,22 @@ cleanTemplate (Template a c) = Template a (clean <$> c)
     where clean = foldr go []
           go (TextBlock t) [] = [TextBlock $ fromMaybe t (stripSuffix "\n" t)]
           go n ns = n:ns
+
+-- | the format to be used when outputting a filtered tree
+data OutputFormat
+    = Plain -- ^ plain text. boring, but reliable (and machine-readable)
+    | Pango -- ^ pango markup. useful for awesomewm or dunst notifications
+    | ANSI  -- ^ colored plain text. not as boring
+    | Custom FilePath -- ^ custom mustache template passed
+    deriving (Show, Eq)
+
+-- | get a template according to output format and agenda mode
+
+-- TODO: make this return an IO Template (since we could need to get one from the path in
+-- a `Custom`
+dispatchTemplate :: OutputFormat -> AgendaMode -> Template
+dispatchTemplate _ (Timed _ both)
+    | both = bothTemplate
+    | otherwise = todoTemplate
+dispatchTemplate _ Todo = todoTemplate
+dispatchTemplate _ Tree = treeTemplate

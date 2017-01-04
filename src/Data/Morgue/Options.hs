@@ -11,6 +11,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Data.Maybe (fromMaybe, maybe)
 import Data.Monoid ((<>))
+import Data.Morgue.Agenda.Render
 import Data.Morgue.Agenda.Time (getCurrentDay, Day)
 import Data.Morgue.Agenda.Types
 
@@ -21,14 +22,6 @@ import System.IO (stderr)
 import System.IO.Error (tryIOError)
 
 import Text.Read (readMaybe)
-
--- | the format to be used when outputting a filtered tree
-data OutputFormat
-    = Plain -- ^ plain text. boring, but reliable (and machine-readable)
-    | Pango -- ^ pango markup. useful for awesomewm or dunst notifications
-    | ANSI  -- ^ colored plain text. not as boring
-    | Custom FilePath -- ^ custom mustache template passed
-    deriving (Show, Eq)
 
 -- | the options we parametrize our behaviour over
 data Options
