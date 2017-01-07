@@ -1,7 +1,9 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveFoldable, DeriveFunctor, DeriveGeneric, DeriveTraversable #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Data.Morgue.Agenda.Render where
+
+import Control.Exception (try)
 
 import Data.Aeson
 import Data.Maybe (fromMaybe)
@@ -11,8 +13,10 @@ import Data.Time.Calendar (Day)
 
 import GHC.Generics
 
-import Text.Mustache (Template(..), Node(..))
-import Text.Mustache.Compile.TH
+import System.IO.Error (tryIOError)
+
+import Text.Mustache
+import qualified Text.Mustache.Compile.TH as TH
 
 newtype TimedAgendaResult = TimedAgendaResult [(Day, AgendaTree)]
 
@@ -42,7 +46,7 @@ instance ToJSON TreeAgendaResult where
 
 -- | the template to render a timed agenda
 timedTemplate :: Template
-timedTemplate = cleanTemplate $(compileMustacheDir "timed" "templates/")
+timedTemplate = cleanTemplate $(TH.compileMustacheDir "timed" "templates/")
 
 -- | the template to render a todo agenda
 todoTemplate :: Template
@@ -65,18 +69,21 @@ cleanTemplate (Template a c) = Template a (clean <$> c)
           go n ns = n:ns
 
 -- | the format to be used when outputting a filtered tree
-data OutputFormat
+data OutputFormat a
     = Plain -- ^ plain text. boring, but reliable (and machine-readable)
     | Pango -- ^ pango markup. useful for awesomewm or dunst notifications
     | ANSI  -- ^ colored plain text. not as boring
-    | Custom FilePath -- ^ custom mustache template passed
-    deriving (Show, Eq)
+    | Custom a -- ^ custom mustache template passed, represented by some type
+    deriving (Show, Eq, Foldable, Functor, Traversable)
+
+-- | compile a template from a path, catching exceptions.
+compileTemplate :: FilePath
+                -> IO (Either IOError (Either MustacheException Template))
+compileTemplate = tryIOError . try . compileMustacheDir "main"
 
 -- | get a template according to output format and agenda mode
-
--- TODO: make this return an IO Template (since we could need to get one from the path in
--- a `Custom`
-dispatchTemplate :: OutputFormat -> AgendaMode -> Template
+dispatchTemplate :: OutputFormat Template -> AgendaMode -> Template
+dispatchTemplate (Custom template) _ = template
 dispatchTemplate _ (Timed _ both)
     | both = bothTemplate
     | otherwise = todoTemplate

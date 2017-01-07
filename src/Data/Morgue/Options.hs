@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Data.Morgue.Options ( run ) where
 
-import Control.Exception (displayException)
+import Control.Exception (displayException, Exception(..))
 import Control.Monad (when)
 
 import Data.Foldable (foldl')
@@ -27,7 +27,7 @@ import Text.Read (readMaybe)
 data Options
     = RunWith
         { optOutput :: Maybe FilePath -- ^ how to output the results
-        , optFormat :: OutputFormat -- ^ the output format to use
+        , optFormat :: OutputFormat FilePath -- ^ the output format to use
         , optMode :: AgendaMode -- ^ the agenda mode to use
         , optDay :: Day -- ^ the starting day of the agenda
         , optTags :: Maybe ([Tag], Bool) -- ^ tags passed to filter the agenda tree
@@ -157,6 +157,17 @@ getFileContents files = foldr go (mempty, mempty, False) <$> mapM get files
           go (Left e) (es, res, s) = (e:es, res, s)
           go (Right r) (es, res, _) = (es, r <> res, True)
 
+-- | handle errors from two layers of exceptions caught with `try` and treat
+-- them as fatal.
+handleNestedErrors :: (Exception e1, Exception e2)
+            => Either e1 (Either e2 b)
+            -> IO b
+handleNestedErrors (Left e) =
+    TIO.hPutStrLn stderr (pack $ displayException e) >> exitFailure
+handleNestedErrors (Right (Left e)) =
+    TIO.hPutStrLn stderr (pack $ displayException e) >> exitFailure
+handleNestedErrors (Right (Right r)) = return r
+
 -- | run, parsing options
 run :: IO ()
 run = do
@@ -174,4 +185,6 @@ runOpts files opts@RunWith{..} = do
     (errs, contents, status) <- getFileContents files
     mapM_ (TIO.hPutStrLn stderr . pack . displayException) errs
     when (not (null errs) && not status) exitFailure
-    print opts
+    format <- mapM compileTemplate optFormat >>= mapM handleNestedErrors
+    let template = dispatchTemplate format optMode
+    return ()
