@@ -1,48 +1,19 @@
-{-# LANGUAGE DeriveFoldable, DeriveFunctor, DeriveGeneric, DeriveTraversable #-}
+{-# LANGUAGE DeriveFoldable, DeriveFunctor, DeriveTraversable #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Data.Morgue.Agenda.Render where
 
 import Control.Exception (try)
 
-import Data.Aeson
 import Data.Maybe (fromMaybe)
+import Data.Morgue.Agenda.Generator
 import Data.Morgue.Agenda.Types
 import Data.Text (stripSuffix)
-import Data.Time.Calendar (Day)
-
-import GHC.Generics
 
 import System.IO.Error (tryIOError)
 
 import Text.Mustache
 import qualified Text.Mustache.Compile.TH as TH
-
-newtype TimedAgendaResult = TimedAgendaResult [(Day, AgendaTree)]
-
-instance ToJSON TimedAgendaResult where
-    toJSON (TimedAgendaResult days) = object [ "days" .= map pairToJSON days ]
-        where pairToJSON (day, tree) = object
-                  [ "day" .= toJSON day
-                  , "tree" .= toJSON tree
-                  ]
-
-newtype TodoAgendaResult = TodoAgendaResult AgendaTree
-
-instance ToJSON TodoAgendaResult where
-    toJSON (TodoAgendaResult tree) = object [ "tree" .= toJSON tree ]
-
-data BothAgendaResult = BothAgendaResult
-    { timed :: TimedAgendaResult
-    , todo :: TodoAgendaResult
-    } deriving Generic
-
-instance ToJSON BothAgendaResult
-
-newtype TreeAgendaResult = TreeAgendaResult AgendaTree
-
-instance ToJSON TreeAgendaResult where
-    toJSON (TreeAgendaResult tree) = object [ "tree" .= toJSON tree ]
 
 -- | the template to render a timed agenda
 timedTemplate :: Template

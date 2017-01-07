@@ -187,4 +187,4 @@ runOpts files opts@RunWith{..} = do
     when (not (null errs) && not status) exitFailure
     format <- mapM compileTemplate optFormat >>= mapM handleNestedErrors
     let template = dispatchTemplate format optMode
-    return ()
+    print opts
