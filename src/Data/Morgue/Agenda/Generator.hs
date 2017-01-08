@@ -1,6 +1,19 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Data.Morgue.Agenda.Generator where
+module Data.Morgue.Agenda.Generator 
+    ( TimedParams(..)
+    , TimedResult(..)
+    , timedResult
+    , TodoParams(..)
+    , TodoResult(..)
+    , todoResult
+    , BothParams(..)
+    , BothResult(..)
+    , bothResult
+    , TreeParams(..)
+    , TreeResult(..)
+    , treeResult
+    ) where
 
 import Data.Aeson
 import Data.List (intersect)
@@ -10,69 +23,87 @@ import Data.Morgue.Agenda.Types
 
 import GHC.Generics
 
-newtype TimedAgendaResult = TimedAgendaResult [(Day, Maybe AgendaTree)]
+-- | the parameters passed to a timed agenda
+data TimedParams = TimedParams Day Integer TreeParams
 
-instance ToJSON TimedAgendaResult where
-    toJSON (TimedAgendaResult days) = object [ "days" .= map pairToJSON days ]
+-- | the result of a timed agenda
+newtype TimedResult = TimedResult [(Day, Maybe AgendaTree)]
+
+instance ToJSON TimedResult where
+    toJSON (TimedResult days) = object [ "days" .= map pairToJSON days ]
         where pairToJSON (day, tree) = object
                   [ "day" .= toJSON day
                   , "tree" .= toJSON tree
                   ]
 
-timedAgendaResult :: TimedParams -> AgendaTree -> TimedAgendaResult
-timedAgendaResult (TimedParams day n tP) t =
-    TimedAgendaResult $ map ((,) <$> id <*> computeTree t) (consecutiveDays day n)
+-- | compute a timed agenda
+timedResult :: TimedParams -> AgendaTree -> TimedResult
+timedResult (TimedParams day n tP) t =
+    TimedResult $ map ((,) <$> id <*> computeTree t) (consecutiveDays day n)
         where computeTree tree d = treeAgenda tP tree >>=
                   filterAgendaTree (agendaTreeFilterTimed False d)
 
-newtype TodoAgendaResult = TodoAgendaResult (Maybe AgendaTree)
+-- | a filter to be used to filter for subtrees denoting elements relevant on a given day
+agendaTreeFilterTimed :: Bool -> Day -> AgendaElement -> AgendaTreeFilter
+agendaTreeFilterTimed showOverdue day element
+    | isRelevant day element || showOverdue = KeepTree
+    | otherwise = DropTreeAndWalk
 
-instance ToJSON TodoAgendaResult where
-    toJSON (TodoAgendaResult tree) = object [ "tree" .= toJSON tree ]
+-- | the parameters passed to a todo agenda
+data TodoParams = TodoParams Bool TreeParams
 
-todoAgendaResult :: TodoParams -> AgendaTree -> TodoAgendaResult
-todoAgendaResult (TodoParams showDone tP) tree =
-    TodoAgendaResult $
-        treeAgenda tP tree >>= filterAgendaTree (agendaTreeFilterTodo showDone)
+-- | the result of a todo agenda
+newtype TodoResult = TodoResult (Maybe AgendaTree)
 
-data BothAgendaResult = BothAgendaResult
-    { timed :: TimedAgendaResult
-    , todo :: TodoAgendaResult
+instance ToJSON TodoResult where
+    toJSON (TodoResult tree) = object [ "tree" .= toJSON tree ]
+
+-- | compute a todo agenda
+todoResult :: TodoParams -> AgendaTree -> TodoResult
+todoResult (TodoParams showDone tP) tree =
+    TodoResult $ treeAgenda tP tree >>= filterAgendaTree (agendaTreeFilterTodo showDone)
+
+-- | a filter for subtrees denoting todo elements
+agendaTreeFilterTodo :: Bool -> AgendaElement -> AgendaTreeFilter
+agendaTreeFilterTodo _ (Elem _ Nothing _ _) = DropTreeAndWalk
+agendaTreeFilterTodo showDone (Elem _ (Just tD) _ _)
+    | tD || showDone = KeepTree
+    | otherwise = DropTreeAndWalk
+
+-- | the parameters passed to a both agenda
+data BothParams = BothParams Day Integer Bool TreeParams
+
+-- | the result of a both agenda
+data BothResult = BothResult
+    { timed :: TimedResult
+    , todo :: TodoResult
     } deriving Generic
 
-instance ToJSON BothAgendaResult
+instance ToJSON BothResult
 
-bothAgendaResult :: BothParams -> AgendaTree -> BothAgendaResult
-bothAgendaResult (BothParams day n showDone tP) =
-    BothAgendaResult <$>
-        timedAgendaResult (TimedParams day n tP) <*>
-            todoAgendaResult (TodoParams showDone tP)
+-- | compute a both agenda
+bothResult :: BothParams -> AgendaTree -> BothResult
+bothResult (BothParams day n sD tP) =
+    BothResult <$> timedResult (TimedParams day n tP) <*> todoResult (TodoParams sD tP)
 
-newtype TreeAgendaResult = TreeAgendaResult (Maybe AgendaTree)
+-- | the parameters passed to a tree agenda
+data TreeParams = TreeParams [Tag] Bool
 
-instance ToJSON TreeAgendaResult where
-    toJSON (TreeAgendaResult tree) = object [ "tree" .= toJSON tree ]
+-- | the result of a tree agenda
+newtype TreeResult = TreeResult (Maybe AgendaTree)
 
-treeAgendaResult :: TreeParams -> AgendaTree -> TreeAgendaResult
-treeAgendaResult tP = TreeAgendaResult . treeAgenda tP
+instance ToJSON TreeResult where
+    toJSON (TreeResult tree) = object [ "tree" .= toJSON tree ]
 
+-- | compute a tree agenda
+treeResult :: TreeParams -> AgendaTree -> TreeResult
+treeResult tP = TreeResult . treeAgenda tP
+
+-- | filter an AgendaTree by tags
 treeAgenda :: TreeParams -> AgendaTree -> Maybe AgendaTree
 treeAgenda (TreeParams ts invert) = filterAgendaTree (getFilter invert ts)
     where getFilter True = agendaTreeFilterNotTagged
           getFilter False = agendaTreeFilterTagged
-
--- | filter an agenda tree by dropping nodes not matched by the passed function
-filterAgendaTree :: (AgendaElement -> AgendaTreeFilter) -> AgendaTree -> Maybe AgendaTree
-filterAgendaTree func tree@(AgendaTree e subTrees) =
-    case func e of
-      KeepTree -> Just tree
-      DropTree -> Nothing
-      KeepTreeAndWalk ->
-          Just $ AgendaTree e (mapMaybe (filterAgendaTree func) subTrees)
-      DropTreeAndWalk ->
-          case mapMaybe (filterAgendaTree func) subTrees of
-            [] -> Nothing
-            children -> Just (AgendaTree e children)
 
 -- | a filter for subtrees tagged with certain tags
 agendaTreeFilterTagged :: [Tag] -> AgendaElement -> AgendaTreeFilter
@@ -86,15 +117,15 @@ agendaTreeFilterNotTagged forbidden (Elem _ _ _ ts)
     | not . null $ forbidden `intersect` ts = DropTree
     | otherwise = KeepTreeAndWalk
 
--- | a filter for subtrees denoting todo elements
-agendaTreeFilterTodo :: Bool -> AgendaElement -> AgendaTreeFilter
-agendaTreeFilterTodo _ (Elem _ Nothing _ _) = DropTreeAndWalk
-agendaTreeFilterTodo showDone (Elem _ (Just tD) _ _)
-    | tD || showDone = KeepTree
-    | otherwise = DropTreeAndWalk
-
--- | a filter to be used to filter for subtrees denoting elements relevant on a given day
-agendaTreeFilterTimed :: Bool -> Day -> AgendaElement -> AgendaTreeFilter
-agendaTreeFilterTimed showOverdue day element
-    | isRelevant day element || showOverdue = KeepTree
-    | otherwise = DropTreeAndWalk
+-- | filter an agenda tree by dropping nodes not matched by the passed function
+filterAgendaTree :: (AgendaElement -> AgendaTreeFilter) -> AgendaTree -> Maybe AgendaTree
+filterAgendaTree func tree@(AgendaTree e subTrees) =
+    case func e of
+      KeepTree -> Just tree
+      DropTree -> Nothing
+      KeepTreeAndWalk ->
+          Just $ AgendaTree e (mapMaybe (filterAgendaTree func) subTrees)
+      DropTreeAndWalk ->
+          case mapMaybe (filterAgendaTree func) subTrees of
+            [] -> Nothing
+            children -> Just (AgendaTree e children)

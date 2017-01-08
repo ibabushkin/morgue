@@ -4,7 +4,6 @@ module Data.Morgue.Agenda.Types where
 
 import Data.Aeson
 import Data.Text (Text)
-import Data.Time.Calendar (Day)
 import Data.Time.LocalTime (LocalTime)
 
 import GHC.Generics
@@ -98,11 +97,3 @@ data AgendaTreeFilter
     | KeepTreeAndWalk -- ^ keep the current node, but check subtrees
     | DropTreeAndWalk -- ^ drop the current node, but check subtrees
     deriving (Show, Eq)
-
-data TimedParams = TimedParams Day Integer TreeParams
-
-data TodoParams = TodoParams Bool TreeParams
-
-data BothParams = BothParams Day Integer Bool TreeParams
-
-data TreeParams = TreeParams [Tag] Bool
