@@ -6,7 +6,6 @@ module Data.Morgue.Agenda.Render where
 import Control.Exception (try)
 
 import Data.Maybe (fromMaybe)
-import Data.Morgue.Agenda.Generator
 import Data.Morgue.Agenda.Types
 import Data.Text (stripSuffix)
 

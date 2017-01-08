@@ -19,19 +19,21 @@ instance ToJSON TimedAgendaResult where
                   , "tree" .= toJSON tree
                   ]
 
-timedAgendaResult :: Day -> Integer -> AgendaTree -> TimedAgendaResult
-timedAgendaResult day n t =
+timedAgendaResult :: TimedParams -> AgendaTree -> TimedAgendaResult
+timedAgendaResult (TimedParams day n tP) t =
     TimedAgendaResult $ map ((,) <$> id <*> computeTree t) (consecutiveDays day n)
-    where computeTree tree d = filterAgendaTree (agendaTreeFilterTimed False d) tree
+        where computeTree tree d = treeAgenda tP tree >>=
+                  filterAgendaTree (agendaTreeFilterTimed False d)
 
 newtype TodoAgendaResult = TodoAgendaResult (Maybe AgendaTree)
 
 instance ToJSON TodoAgendaResult where
     toJSON (TodoAgendaResult tree) = object [ "tree" .= toJSON tree ]
 
-todoAgendaResult :: Bool -> AgendaTree -> TodoAgendaResult
-todoAgendaResult showDone =
-    TodoAgendaResult . filterAgendaTree (agendaTreeFilterTodo showDone)
+todoAgendaResult :: TodoParams -> AgendaTree -> TodoAgendaResult
+todoAgendaResult (TodoParams showDone tP) tree =
+    TodoAgendaResult $
+        treeAgenda tP tree >>= filterAgendaTree (agendaTreeFilterTodo showDone)
 
 data BothAgendaResult = BothAgendaResult
     { timed :: TimedAgendaResult
@@ -40,17 +42,22 @@ data BothAgendaResult = BothAgendaResult
 
 instance ToJSON BothAgendaResult
 
-bothAgendaResult :: Day -> Integer -> Bool -> AgendaTree -> BothAgendaResult
-bothAgendaResult day n showDone =
-    BothAgendaResult <$> timedAgendaResult day n <*> todoAgendaResult showDone
+bothAgendaResult :: BothParams -> AgendaTree -> BothAgendaResult
+bothAgendaResult (BothParams day n showDone tP) =
+    BothAgendaResult <$>
+        timedAgendaResult (TimedParams day n tP) <*>
+            todoAgendaResult (TodoParams showDone tP)
 
 newtype TreeAgendaResult = TreeAgendaResult (Maybe AgendaTree)
 
 instance ToJSON TreeAgendaResult where
     toJSON (TreeAgendaResult tree) = object [ "tree" .= toJSON tree ]
 
-treeAgendaResult :: [Tag] -> Bool -> AgendaTree -> TreeAgendaResult
-treeAgendaResult tags invert = TreeAgendaResult . filterAgendaTree (getFilter invert tags)
+treeAgendaResult :: TreeParams -> AgendaTree -> TreeAgendaResult
+treeAgendaResult tP = TreeAgendaResult . treeAgenda tP
+
+treeAgenda :: TreeParams -> AgendaTree -> Maybe AgendaTree
+treeAgenda (TreeParams ts invert) = filterAgendaTree (getFilter invert ts)
     where getFilter True = agendaTreeFilterNotTagged
           getFilter False = agendaTreeFilterTagged
 
