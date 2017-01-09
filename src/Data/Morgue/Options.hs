@@ -194,9 +194,10 @@ runOpts files opts@RunWith{..} = do
     format <- mapM compileTemplate optFormat >>= mapM handleNestedErrors
     let template = dispatchTemplate format optMode
     case runWith opts template <$> getAgendaTree contents of
-      Just res -> TIO.putStrLn res
+      Just res -> output optOutput res
       Nothing -> TIO.hPutStrLn stderr "could not parse your markdown files"
 
+-- | handle options, computing actual output
 runWith :: Options -> Template -> AgendaTree -> Text
 runWith RunWith{..} template tree
     | Timed num True <- optMode =
@@ -212,3 +213,8 @@ runWith RunWith{..} template tree
           toText :: ToJSON a => a -> Text
           toText = toStrict . renderMustache template . toJSON
 runWith _ _ _ = mempty
+
+-- | dispatch the output to an appropriate place
+output :: Maybe FilePath -> Text -> IO ()
+output (Just file) = TIO.writeFile file
+output Nothing = TIO.putStr

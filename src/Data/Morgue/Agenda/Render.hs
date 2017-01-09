@@ -59,5 +59,3 @@ dispatchTemplate _ (Timed _ both)
     | otherwise = todoTemplate
 dispatchTemplate _ Todo = todoTemplate
 dispatchTemplate _ Tree = treeTemplate
-
--- dispatchRender :: 
