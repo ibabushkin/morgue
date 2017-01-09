@@ -1,9 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Data.Morgue.Agenda
-    ( parseMarkdown
-    , restoreHierarchy
-    , getAgendaTree
-    ) where
+module Data.Morgue.Agenda (getAgendaTree) where
 
 import CMark
 
@@ -54,22 +50,26 @@ restoreHierarchy = go 1
           nest (Node p' (HEADING j) ns' : nss) = [Node p' (HEADING j) (ns' ++ nss)]
           nest nss = nss
 
--- | get a specialized agenda-focused AST from the markdown AST
-getAgendaTree :: Node -> Maybe AgendaTree
-getAgendaTree n@(Node _ DOCUMENT _) =
+-- | get a specialized agenda-focused AST from the cleaned CMark AST
+getAgendaTreeFromNode :: Node -> Maybe AgendaTree
+getAgendaTreeFromNode n@(Node _ DOCUMENT _) =
     Just $ AgendaTree rootNode (getChildren n)
     where rootNode = Elem "root" Nothing Nothing []
-getAgendaTree (Node _ ITEM (Node _ PARAGRAPH ps : ns)) =
+getAgendaTreeFromNode (Node _ ITEM (Node _ PARAGRAPH ps : ns)) =
     AgendaTree <$> parseElement (getParagraphText ps) <*> getGrandchildren ns
-getAgendaTree (Node _ (HEADING _) (Node _ (TEXT t) [] : ns)) =
+getAgendaTreeFromNode (Node _ (HEADING _) (Node _ (TEXT t) [] : ns)) =
     AgendaTree <$> parseElement t <*> getGrandchildren ns
-getAgendaTree _ = Nothing
+getAgendaTreeFromNode _ = Nothing
+
+-- | get a specialized agenda-focused AST from a `Text`
+getAgendaTree :: Text -> Maybe AgendaTree
+getAgendaTree = getAgendaTreeFromNode . restoreHierarchy . parseMarkdown
 
 -- | get the children of a node as `AgendaTree`s
 getChildren :: Node -> [AgendaTree]
-getChildren (Node _ (LIST _) ns) = mapMaybe getAgendaTree ns
+getChildren (Node _ (LIST _) ns) = mapMaybe getAgendaTreeFromNode ns
 getChildren (Node _ _ ns) = foldr go [] ns
-    where go n ts = case getAgendaTree n of
+    where go n ts = case getAgendaTreeFromNode n of
                       Just t -> t : ts
                       Nothing -> getChildren n ++ ts
 
