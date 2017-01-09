@@ -24,7 +24,7 @@ import Data.Morgue.Agenda.Types
 import GHC.Generics
 
 -- | the parameters passed to a timed agenda
-data TimedParams = TimedParams Day Integer TreeParams
+data TimedParams = TimedParams Day Integer (Maybe TreeParams)
 
 -- | the result of a timed agenda
 newtype TimedResult = TimedResult [(Day, Maybe AgendaTree)]
@@ -39,9 +39,11 @@ instance ToJSON TimedResult where
 -- | compute a timed agenda
 timedResult :: TimedParams -> AgendaTree -> TimedResult
 timedResult (TimedParams day n tP) t =
-    TimedResult $ map ((,) <$> id <*> computeTree t) (consecutiveDays day n)
-        where computeTree tree d = treeAgenda tP tree >>=
-                  filterAgendaTree (agendaTreeFilterTimed False d)
+    TimedResult $ map ((,) <$> id <*> computeTree t tP) (consecutiveDays day n)
+    where computeTree tree (Just treeParams) d = treeAgenda treeParams tree >>=
+              filterAgendaTree (agendaTreeFilterTimed False d)
+          computeTree tree Nothing d =
+              filterAgendaTree (agendaTreeFilterTimed False d) tree
 
 -- | a filter to be used to filter for subtrees denoting elements relevant on a given day
 agendaTreeFilterTimed :: Bool -> Day -> AgendaElement -> AgendaTreeFilter
@@ -50,7 +52,7 @@ agendaTreeFilterTimed showOverdue day element
     | otherwise = DropTreeAndWalk
 
 -- | the parameters passed to a todo agenda
-data TodoParams = TodoParams Bool TreeParams
+data TodoParams = TodoParams Bool (Maybe TreeParams)
 
 -- | the result of a todo agenda
 newtype TodoResult = TodoResult (Maybe AgendaTree)
@@ -60,8 +62,10 @@ instance ToJSON TodoResult where
 
 -- | compute a todo agenda
 todoResult :: TodoParams -> AgendaTree -> TodoResult
-todoResult (TodoParams showDone tP) tree =
+todoResult (TodoParams showDone (Just tP)) tree =
     TodoResult $ treeAgenda tP tree >>= filterAgendaTree (agendaTreeFilterTodo showDone)
+todoResult (TodoParams showDone Nothing) tree =
+    TodoResult $ filterAgendaTree (agendaTreeFilterTodo showDone) tree
 
 -- | a filter for subtrees denoting todo elements
 agendaTreeFilterTodo :: Bool -> AgendaElement -> AgendaTreeFilter
@@ -71,7 +75,7 @@ agendaTreeFilterTodo showDone (Elem _ (Just tD) _ _)
     | otherwise = DropTreeAndWalk
 
 -- | the parameters passed to a both agenda
-data BothParams = BothParams Day Integer Bool TreeParams
+data BothParams = BothParams Day Integer Bool (Maybe TreeParams)
 
 -- | the result of a both agenda
 data BothResult = BothResult

@@ -1,16 +1,21 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE RecordWildCards #-}
 module Data.Morgue.Options ( run ) where
 
 import Control.Exception (displayException, Exception(..))
 import Control.Monad (when)
 
+import Data.Aeson (ToJSON(..))
 import Data.Foldable (foldl')
 import Data.Text (Text, pack)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
+import Data.Text.Lazy (toStrict)
 import Data.Maybe (fromMaybe, maybe)
 import Data.Monoid ((<>))
+import Data.Morgue.Agenda
+import Data.Morgue.Agenda.Generator
 import Data.Morgue.Agenda.Render
 import Data.Morgue.Agenda.Time (getCurrentDay, Day)
 import Data.Morgue.Agenda.Types
@@ -21,6 +26,7 @@ import System.Exit (exitSuccess, exitFailure)
 import System.IO (stderr)
 import System.IO.Error (tryIOError)
 
+import Text.Mustache (Template, renderMustache)
 import Text.Read (readMaybe)
 
 -- | the options we parametrize our behaviour over
@@ -187,4 +193,22 @@ runOpts files opts@RunWith{..} = do
     when (not (null errs) && not status) exitFailure
     format <- mapM compileTemplate optFormat >>= mapM handleNestedErrors
     let template = dispatchTemplate format optMode
-    print opts
+    case runWith opts template <$> getAgendaTree contents of
+      Just res -> TIO.putStrLn res
+      Nothing -> TIO.hPutStrLn stderr "could not parse your markdown files"
+
+runWith :: Options -> Template -> AgendaTree -> Text
+runWith RunWith{..} template tree
+    | Timed num True <- optMode =
+        toText $ bothResult (BothParams optDay num True (getTreeParams <$> optTags)) tree
+    | Timed num False <- optMode =
+        toText $ timedResult (TimedParams optDay num (getTreeParams <$> optTags)) tree
+    | Todo <- optMode =
+        toText $ todoResult (TodoParams True (getTreeParams <$> optTags)) tree
+    | Tree <- optMode, Just (tags, inv) <- optTags =
+        toText $ treeResult (TreeParams tags inv) tree
+    | otherwise = toText . TreeResult $ Just tree
+    where getTreeParams = uncurry TreeParams
+          toText :: ToJSON a => a -> Text
+          toText = toStrict . renderMustache template . toJSON
+runWith _ _ _ = mempty
