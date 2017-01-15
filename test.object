@@ -1,0 +1,268 @@
+{
+  "tree": {
+    "children": [
+      {
+        "children": [
+          {
+            "children": [],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "rust backend\n",
+              "tags": []
+            }
+          },
+          {
+            "children": [],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "write other language backends\n",
+              "tags": []
+            }
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "indent": 3,
+                "element": {
+                  "time": null,
+                  "toDo": true,
+                  "description": "use a DTrace or eBPF/bcc\n",
+                  "tags": []
+                }
+              },
+              {
+                "children": [],
+                "indent": 3,
+                "element": {
+                  "time": null,
+                  "toDo": null,
+                  "description": "maybe just use system time and heap-revalidation on entries? (unlikely to work)\n",
+                  "tags": []
+                }
+              }
+            ],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "fix syncing issues (notify clonejo)\n",
+              "tags": []
+            }
+          },
+          {
+            "children": [],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "get initial prototype done\n",
+              "tags": []
+            }
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "indent": 3,
+                "element": {
+                  "time": null,
+                  "toDo": null,
+                  "description": "find out why and most importantly when this stuff fails to work\n",
+                  "tags": []
+                }
+              }
+            ],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "fix client name lookup\n",
+              "tags": []
+            }
+          },
+          {
+            "children": [],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "9/10 tests... :slow:\n",
+              "tags": []
+            }
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "indent": 3,
+                "element": {
+                  "time": null,
+                  "toDo": null,
+                  "description": "apparently our JSON schema seems to be out of date\n",
+                  "tags": []
+                }
+              },
+              {
+                "children": [],
+                "indent": 3,
+                "element": {
+                  "time": null,
+                  "toDo": null,
+                  "description": "a general polish run on the codebase would make sense\n",
+                  "tags": []
+                }
+              }
+            ],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "fix bugs occuring recently\n",
+              "tags": []
+            }
+          },
+          {
+            "children": [],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "finish morgue rewrite\n",
+              "tags": []
+            }
+          },
+          {
+            "children": [],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "fix bugs on occasion :slow:\n",
+              "tags": []
+            }
+          },
+          {
+            "children": [],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "add ranges when needed :slow:\n",
+              "tags": []
+            }
+          }
+        ],
+        "indent": 1,
+        "element": {
+          "time": null,
+          "toDo": null,
+          "description": "projects",
+          "tags": []
+        }
+      },
+      {
+        "children": [
+          {
+            "children": [],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": false,
+              "description": "lend a Böll to Judith\n",
+              "tags": []
+            }
+          }
+        ],
+        "indent": 1,
+        "element": {
+          "time": null,
+          "toDo": null,
+          "description": "birthdays and stuff",
+          "tags": []
+        }
+      },
+      {
+        "children": [
+          {
+            "children": [],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "fix connman on resume :pending:\n",
+              "tags": []
+            }
+          },
+          {
+            "children": [],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "switch to OpenRC (or abandon Arch altogether) :pending:\n",
+              "tags": []
+            }
+          },
+          {
+            "children": [],
+            "indent": 2,
+            "element": {
+              "time": {
+                "mode": "Deadline",
+                "timeValue": "2017-01-31T00:00:00",
+                "repeat": {
+                  "numSteps": 1,
+                  "lenSteps": "Month"
+                },
+                "toPrint": false
+              },
+              "toDo": true,
+              "description": "pay for the VPS\n",
+              "tags": []
+            }
+          }
+        ],
+        "indent": 1,
+        "element": {
+          "time": null,
+          "toDo": null,
+          "description": "system",
+          "tags": []
+        }
+      },
+      {
+        "children": [
+          {
+            "children": [],
+            "indent": 2,
+            "element": {
+              "time": null,
+              "toDo": true,
+              "description": "implement tests for typechecks\n",
+              "tags": []
+            }
+          }
+        ],
+        "indent": 1,
+        "element": {
+          "time": null,
+          "toDo": null,
+          "description": "work",
+          "tags": []
+        }
+      }
+    ],
+    "indent": 0,
+    "element": {
+      "time": null,
+      "toDo": null,
+      "description": "root",
+      "tags": []
+    }
+  }
+}

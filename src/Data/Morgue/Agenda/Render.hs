@@ -5,9 +5,12 @@ module Data.Morgue.Agenda.Render where
 
 import Control.Exception (try)
 
+import Data.Aeson (ToJSON(..), encode)
 import Data.Maybe (fromMaybe)
 import Data.Morgue.Agenda.Types
-import Data.Text (stripSuffix)
+import Data.Text (Text, stripSuffix)
+import Data.Text.Lazy (toStrict)
+import Data.Text.Lazy.Encoding (decodeUtf8)
 
 import System.IO.Error (tryIOError)
 
@@ -52,6 +55,7 @@ compileTemplate :: FilePath
 compileTemplate = tryIOError . try . compileMustacheDir "main"
 
 -- | get a template according to output format and agenda mode
+-- TODO: set the custom template entry point to use here!
 dispatchTemplate :: OutputFormat Template -> AgendaMode -> Template
 dispatchTemplate (Custom template) _ = template
 dispatchTemplate _ (Timed _ both)
@@ -59,3 +63,9 @@ dispatchTemplate _ (Timed _ both)
     | otherwise = todoTemplate
 dispatchTemplate _ Todo = todoTemplate
 dispatchTemplate _ Tree = treeTemplate
+
+render :: ToJSON a => Template -> a -> Text
+render template = toStrict . renderMustache template . toJSON
+
+renderJSON :: ToJSON a => a -> Text
+renderJSON = toStrict . decodeUtf8 . encode . toJSON

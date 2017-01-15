@@ -10,7 +10,12 @@ maintainer:          inokentiy.babushkin@googlemail.com
 copyright:           Copyright: (c) 2015 - 2016 Inokentiy Babushkin
 category:            Data
 build-type:          Simple
-extra-source-files:  README.md
+extra-source-files:  README.md,
+                     templates/both.mustache,
+                     templates/element.mustache,
+                     templates/timed.mustache,
+                     templates/todo.mustache,
+                     templates/tree.mustache
 cabal-version:       >=1.10
 
 flag documentation
@@ -61,8 +66,10 @@ test-suite spec
   ghc-options:       -Wall -threaded -rtsopts -with-rtsopts=-N
   type:              exitcode-stdio-1.0
   hs-source-dirs:    test
+  other-modules:   TemplateSpec
   main-is:           Spec.hs
   build-depends:     base,
                      morgue,
+                     stache,
                      hspec,
                      QuickCheck

@@ -11,7 +11,6 @@ import Data.Foldable (foldl')
 import Data.Text (Text, pack)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
-import Data.Text.Lazy (toStrict)
 import Data.Maybe (fromMaybe, maybe)
 import Data.Monoid ((<>))
 import Data.Morgue.Agenda
@@ -26,7 +25,7 @@ import System.Exit (exitSuccess, exitFailure)
 import System.IO (stderr)
 import System.IO.Error (tryIOError)
 
-import Text.Mustache (Template, renderMustache)
+import Text.Mustache (Template)
 import Text.Read (readMaybe)
 
 -- | the options we parametrize our behaviour over
@@ -211,7 +210,7 @@ runWith RunWith{..} template tree
     | otherwise = toText . TreeResult $ Just tree
     where getTreeParams = uncurry TreeParams
           toText :: ToJSON a => a -> Text
-          toText = toStrict . renderMustache template . toJSON
+          toText = render template
 runWith _ _ _ = mempty
 
 -- | dispatch the output to an appropriate place
