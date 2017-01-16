@@ -66,7 +66,8 @@ test-suite spec
   ghc-options:       -Wall -threaded -rtsopts -with-rtsopts=-N
   type:              exitcode-stdio-1.0
   hs-source-dirs:    test
-  other-modules:   TemplateSpec
+  other-modules:     TemplateSpec,
+                     ToJSONSpec
   main-is:           Spec.hs
   build-depends:     base,
                      morgue,

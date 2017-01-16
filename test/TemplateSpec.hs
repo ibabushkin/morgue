@@ -25,10 +25,6 @@ elementTemplateSpec = describe "elementTemplate" $ do
 
 treeTemplateSpec :: Spec
 treeTemplateSpec = describe "treeTemplate" $ do
-    it "gets proper JSON as input" $
-        renderJSON (AgendaTree (Elem "root" Nothing Nothing []) [])
-            `shouldBe` "{\"children\":[],\"indent\":0,\"element\":{\"time\":null,\"toDo\":null,\"description\":\"root\",\"tags\":[]}}"
-    it "looks healthy" $ print treeTemplate `shouldReturn` ()
     it "displays simple values correctly" $
         render treeTemplate (AgendaTree (Elem "root" Nothing Nothing []) [])
             `shouldBe` "root\n"
@@ -68,18 +64,16 @@ Template
             ]
           )
         , ( PName {unPName = "tree"}
-          , [ Section (Key {unKey = ["tree"]})
+          , [ Section (Key {unKey = ["element"]})
+                [Partial (PName {unPName = "element"}) Nothing]
+            , TextBlock "\n",Section (Key {unKey = ["children"]})
                 [ Section (Key {unKey = ["element"]})
-                    [Partial (PName {unPName = "element"}) Nothing]
-                , TextBlock "\n",Section (Key {unKey = ["children"]})
-                    [ Section (Key {unKey = ["element"]})
-                        [ UnescapedVar (Key {unKey = ["indent"]})
-                        , TextBlock ": "
-                        , Partial (PName {unPName = "element"}) Nothing
-                        ]
+                    [ UnescapedVar (Key {unKey = ["indent"]})
+                    , TextBlock ": "
+                    , Partial (PName {unPName = "element"}) Nothing
                     ]
-                , TextBlock "\n"
                 ]
+            , TextBlock "\n"
             ]
           )
         ]
