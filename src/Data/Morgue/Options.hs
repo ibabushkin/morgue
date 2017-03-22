@@ -11,7 +11,7 @@ import Data.Foldable (foldl')
 import Data.Text (Text, pack)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
-import Data.Maybe (fromMaybe, maybe)
+import Data.Maybe (fromMaybe, maybe, isNothing)
 import Data.Monoid ((<>))
 import Data.Morgue.Agenda
 import Data.Morgue.Agenda.Generator
@@ -153,20 +153,19 @@ setCustomFormat path opts@RunWith{} = opts { optFormat = Custom path }
 setCustomFormat _ opts = opts
 
 -- | get the file contents to work with, including a list of I/O errors
--- that occured and a flag indicating whether the operation can be considered
--- sucessful (that is, at least one of the given sources returned data).
-getFileContents :: [FilePath] -> IO ([IOError], Text, Bool)
-getFileContents files = foldr go (mempty, mempty, False) <$> mapM get files
+-- that occured and the data, if any of the sources returned some
+getFileContents :: [FilePath] -> IO ([IOError], Maybe Text)
+getFileContents files = foldr go (mempty, Nothing) <$> mapM get files
     where get "-" = tryIOError TIO.getContents
           get fName = tryIOError (TIO.readFile fName)
-          go (Left e) (es, res, s) = (e:es, res, s)
-          go (Right r) (es, res, _) = (es, r <> res, True)
+          go (Left e) (es, res) = (e:es, res)
+          go (Right r) (es, res) = (es, Just r <> res)
 
 -- | handle errors from two layers of exceptions caught with `try` and treat
 -- them as fatal.
 handleNestedErrors :: (Exception e1, Exception e2)
-            => Either e1 (Either e2 b)
-            -> IO b
+                   => Either e1 (Either e2 b)
+                   -> IO b
 handleNestedErrors (Left e) =
     TIO.hPutStrLn stderr (pack $ displayException e) >> exitFailure
 handleNestedErrors (Right (Left e)) =
@@ -187,12 +186,12 @@ runOpts :: [FilePath] -> Options -> IO ()
 runOpts _ Help = helpMessage >>= TIO.hPutStr stderr >> exitSuccess
 runOpts _ Version = versionMessage >>= TIO.hPutStrLn stderr
 runOpts files opts@RunWith{..} = do
-    (errs, contents, status) <- getFileContents files
+    (errs, contents) <- getFileContents files
     mapM_ (TIO.hPutStrLn stderr . pack . displayException) errs
-    when (not (null errs) && not status) exitFailure
+    when (not (null errs) && isNothing contents) exitFailure
     format <- mapM compileTemplate optFormat >>= mapM handleNestedErrors
     let template = dispatchTemplate format optMode
-    case runWith opts template <$> getAgendaTree contents of
+    case runWith opts template <$> (contents >>= getAgendaTree) of
       Just res -> output optOutput res
       Nothing -> TIO.hPutStrLn stderr "could not parse your markdown files"
 
