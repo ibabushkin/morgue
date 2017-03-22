@@ -179,13 +179,13 @@ run = do
     args <- getArgs
     let (actions, files, _) = getOpt RequireOrder options args
     opts <- foldl' (flip ($)) <$> defaultOptions <*> pure actions
-    runOpts files opts
+    runOpts opts files
 
 -- | given some files and options, take the appropriate action
-runOpts :: [FilePath] -> Options -> IO ()
-runOpts _ Help = helpMessage >>= TIO.hPutStr stderr >> exitSuccess
-runOpts _ Version = versionMessage >>= TIO.hPutStrLn stderr
-runOpts files opts@RunWith{..} = do
+runOpts :: Options -> [FilePath] -> IO ()
+runOpts Help _ = helpMessage >>= TIO.hPutStr stderr >> exitSuccess
+runOpts Version _ = versionMessage >>= TIO.hPutStrLn stderr
+runOpts opts@RunWith{..} files = do
     (errs, contents) <- getFileContents files
     mapM_ (TIO.hPutStrLn stderr . pack . displayException) errs
     when (not (null errs) && isNothing contents) exitFailure
