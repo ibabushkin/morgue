@@ -12,6 +12,8 @@ import Data.Text (Text, stripSuffix)
 import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Encoding (decodeUtf8)
 
+import Debug.Trace
+
 import System.IO.Error (tryIOError)
 
 import Text.Mustache
@@ -65,7 +67,7 @@ dispatchTemplate _ Todo = todoTemplate
 dispatchTemplate _ Tree = treeTemplate
 
 render :: ToJSON a => Template -> a -> Text
-render template = toStrict . renderMustache template . toJSON
+render template a = toStrict . renderMustache template $ trace (show $ toJSON a) (toJSON a)
 
 renderJSON :: ToJSON a => a -> Text
 renderJSON = toStrict . decodeUtf8 . encode . toJSON
