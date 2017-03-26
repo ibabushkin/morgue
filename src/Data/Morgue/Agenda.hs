@@ -9,7 +9,7 @@ import Control.Monad (mzero)
 --import Data.Attoparsec.Text
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Morgue.Agenda.Types
-import Data.Text (Text, pack)
+import Data.Text (Text, pack, stripSuffix)
 import qualified Data.Text as T
 import Data.Time (LocalTime, defaultTimeLocale)
 import Data.Time.Format (parseTimeM)
@@ -79,7 +79,8 @@ getGrandchildren = pure . concatMap getChildren
 
 -- | get the text from a paragraph
 getParagraphText :: [Node] -> Text
-getParagraphText ns = mconcat (map formatMarkdown ns)
+getParagraphText ns =
+    fromMaybe <$> id <*> stripSuffix "\n" $ mconcat (map formatMarkdown ns)
 
 -- | wrap the agenda element description parser
 parseElement :: Text -> Maybe AgendaElement
