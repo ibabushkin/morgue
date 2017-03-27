@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 module Data.Morgue.Agenda.Types where
 
 import Data.Aeson
@@ -66,7 +67,20 @@ data AgendaElement = Elem
 instance Ord AgendaElement where
     (<=) (Elem _ _ a _) (Elem _ _ b _) = a <= b
 
-instance ToJSON AgendaElement
+instance ToJSON AgendaElement where
+    toJSON Elem{..} = object
+        [ "description" .= description
+        , "toDo" .= toDoToJSON toDo
+        , "time" .= time
+        , "tags" .= tags
+        ]
+
+-- | render todo markers to a nice view known from orgmode
+toDoToJSON :: Maybe Bool -> Value
+toDoToJSON Nothing = Null
+toDoToJSON (Just val)
+    | val = String "TODO"
+    | otherwise = String "DONE"
 
 -- | a tree of hierarchically ordered agenda elements of any type
 data AgendaTree = AgendaTree AgendaElement [AgendaTree]
