@@ -79,8 +79,8 @@ getGrandchildren = pure . concatMap getChildren
 
 -- | get the text from a paragraph
 getParagraphText :: [Node] -> Text
-getParagraphText ns =
-    fromMaybe <$> id <*> stripSuffix "\n" $ mconcat (map formatMarkdown ns)
+getParagraphText =
+    (fromMaybe <$> id <*> stripSuffix "\n") . mconcat . map formatMarkdown
 
 -- | wrap the agenda element description parser
 parseElement :: Text -> Maybe AgendaElement

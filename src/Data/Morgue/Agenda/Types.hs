@@ -4,6 +4,7 @@ module Data.Morgue.Agenda.Types where
 
 import Data.Aeson
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time.LocalTime (LocalTime)
 
 import GHC.Generics
@@ -79,7 +80,7 @@ instance ToJSON AgendaTree where
 agendaTreeToJSON :: Integer -> AgendaTree -> Value
 agendaTreeToJSON n (AgendaTree e cs) = object
     [ "element" .= e
-    , "indent" .= n
+    , "indent" .= T.replicate (fromIntegral n) " "
     , "children" .= map (agendaTreeToJSON (n + 1)) cs
     ]
 
