@@ -32,22 +32,18 @@ formatMarkdown = T.filter (/= '\\') . nodeToCommonmark commonmarkOptions Nothing
 
 -- | restructure the AST to make it... easier to process
 splitByHeading :: Level -> [Node] -> [[Node]]
-splitByHeading k = foldr go []
+splitByHeading k = foldr go [[]]
     where go new@(Node _ (HEADING j) _) (n : ns)
               | j == k = [] : (new : n) : ns
               | otherwise = (new : n) : ns
-          go new@(Node _ (HEADING j) _) []
-              | j == k = [[], [new]]
-              | otherwise = [[new]]
           go new (n:ns) = (new : n) : ns
-          go new [] = [[new]]
 
 -- | more AST restructuring
 restoreHierarchy :: Node -> Node
 restoreHierarchy = go 1
     where go k (Node p t ns) = Node p t (map (go (k + 1)) (children k ns))
           children k = concatMap nest . splitByHeading k
-          nest (Node p' (HEADING j) ns' : nss) = [Node p' (HEADING j) (ns' ++ nss)]
+          nest (Node p' h@(HEADING _) [] : nss) = [Node p' h nss]
           nest nss = nss
 
 -- | get a specialized agenda-focused AST from the cleaned CMark AST
