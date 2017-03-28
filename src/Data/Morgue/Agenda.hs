@@ -18,6 +18,10 @@ import Text.Megaparsec
 import Text.Megaparsec.Lexer (integer)
 import Text.Megaparsec.Text
 
+-- | get a specialized agenda-focused AST from a `Text`
+getAgendaTree :: Text -> Maybe AgendaTree
+getAgendaTree = getAgendaTreeFromNode . restoreHierarchy . parseMarkdown
+
 -- | the options we use while parsing markdown
 commonmarkOptions :: [CMarkOption]
 commonmarkOptions = [optSafe, optNormalize]
@@ -43,7 +47,7 @@ restoreHierarchy :: Node -> Node
 restoreHierarchy = go 1
     where go k (Node p t ns) = Node p t (map (go (k + 1)) (children k ns))
           children k = concatMap nest . splitByHeading k
-          nest (Node p' h@(HEADING _) [] : nss) = [Node p' h nss]
+          nest (Node p' h@(HEADING _) cs : nss) = [Node p' h (cs ++ nss)]
           nest nss = nss
 
 -- | get a specialized agenda-focused AST from the cleaned CMark AST
@@ -56,10 +60,6 @@ getAgendaTreeFromNode (Node _ ITEM (Node _ PARAGRAPH ps : ns)) =
 getAgendaTreeFromNode (Node _ (HEADING _) (Node _ (TEXT t) [] : ns)) =
     AgendaTree <$> parseElement t <*> getGrandchildren ns
 getAgendaTreeFromNode _ = Nothing
-
--- | get a specialized agenda-focused AST from a `Text`
-getAgendaTree :: Text -> Maybe AgendaTree
-getAgendaTree = getAgendaTreeFromNode . restoreHierarchy . parseMarkdown
 
 -- | get the children of a node as `AgendaTree`s
 getChildren :: Node -> [AgendaTree]
@@ -89,7 +89,7 @@ parseElement input =
 elementP :: Parser AgendaElement
 elementP = do
     td <- optional (checkboxP <* space)
-    ts <- optional (timestampP <* space)
+    ts <- optional (try timestampP <* space)
     tg <- fromMaybe [] <$> optional (tagsP <* space)
     de <- pack <$> some anyChar -- TODO: no pack
     return $ Elem de td ts tg
