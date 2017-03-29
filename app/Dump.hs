@@ -50,4 +50,4 @@ getFileName = do
 -- | glue everything together (we use the guarantee that our tree dump ends with a newline)
 main :: IO ()
 main = getFileName >>= TIO.readFile >>=
-    TIO.putStr . maybe "tree transform failed" (dumpOwn 0) . getAgendaTree
+    mapM_ (TIO.putStr . dumpOwn 0) . getAgendaTree

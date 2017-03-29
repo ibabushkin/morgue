@@ -191,8 +191,8 @@ runOpts opts@RunWith{..} files = do
     when (not (null errs) && isNothing contents) exitFailure
     format <- mapM compileTemplate optFormat >>= mapM handleNestedErrors
     let template = dispatchTemplate format optMode
-    case runWith opts template <$> (contents >>= getAgendaTree) of
-      Just res -> output optOutput res
+    case (map (runWith opts template) . getAgendaTree) <$> contents of
+      Just res -> mapM_ (output optOutput) res
       Nothing -> TIO.hPutStrLn stderr "could not parse your markdown files"
 
 -- | handle options, computing actual output

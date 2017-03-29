@@ -19,8 +19,10 @@ import Text.Megaparsec.Lexer (integer)
 import Text.Megaparsec.Text
 
 -- | get a specialized agenda-focused AST from a `Text`
-getAgendaTree :: Text -> Maybe AgendaTree
-getAgendaTree = getAgendaTreeFromNode . restoreHierarchy . parseMarkdown
+getAgendaTree :: Text -> [AgendaTree]
+getAgendaTree = getAgendaTreeFromDocument . restoreHierarchy . parseMarkdown
+    where getAgendaTreeFromDocument n@(Node _ DOCUMENT _) = getChildren n
+          getAgendaTreeFromDocument _ = []
 
 -- | the options we use while parsing markdown
 commonmarkOptions :: [CMarkOption]
@@ -41,6 +43,7 @@ splitByHeading k = foldr go [[]]
               | j == k = [] : (new : n) : ns
               | otherwise = (new : n) : ns
           go new (n:ns) = (new : n) : ns
+          go _ [] = [[]] -- unreachable
 
 -- | more AST restructuring
 restoreHierarchy :: Node -> Node
@@ -52,13 +55,10 @@ restoreHierarchy = go 1
 
 -- | get a specialized agenda-focused AST from the cleaned CMark AST
 getAgendaTreeFromNode :: Node -> Maybe AgendaTree
-getAgendaTreeFromNode n@(Node _ DOCUMENT _) =
-    Just $ AgendaTree rootNode (getChildren n)
-    where rootNode = Elem "root" Nothing Nothing []
 getAgendaTreeFromNode (Node _ ITEM (Node _ PARAGRAPH ps : ns)) =
-    AgendaTree <$> parseElement (getParagraphText ps) <*> getGrandchildren ns
+    AgendaTree <$> parseElement (getParagraphText ps) <*> getSubtree ns
 getAgendaTreeFromNode (Node _ (HEADING _) (Node _ (TEXT t) [] : ns)) =
-    AgendaTree <$> parseElement t <*> getGrandchildren ns
+    AgendaTree <$> parseElement t <*> getSubtree ns
 getAgendaTreeFromNode _ = Nothing
 
 -- | get the children of a node as `AgendaTree`s
@@ -69,9 +69,11 @@ getChildren (Node _ _ ns) = foldr go [] ns
                       Just t -> t : ts
                       Nothing -> getChildren n ++ ts
 
--- | get the grandchildren as `AgendaTree`s, given the list of child nodes
-getGrandchildren :: Applicative f => [Node] -> f [AgendaTree]
-getGrandchildren = pure . concatMap getChildren
+-- | get subtrees as `AgendaTree`s, given the list of child nodes
+getSubtree :: Applicative f => [Node] -> f [AgendaTree]
+getSubtree = pure . concatMap buildTree
+    where buildTree n@(Node _ (LIST _) _) = getChildren n
+          buildTree n = fromMaybe [] $ pure <$> getAgendaTreeFromNode n
 
 -- | get the text from a paragraph
 getParagraphText :: [Node] -> Text
