@@ -14,6 +14,7 @@ extra-source-files:  README.md,
                      templates/both.mustache,
                      templates/element.mustache,
                      templates/subtree.mustache,
+                     templates/time.mustache,
                      templates/timed.mustache,
                      templates/todo.mustache,
                      templates/tree.mustache
