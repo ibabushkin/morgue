@@ -190,8 +190,7 @@ runOpts opts@RunWith{..} files = do
     mapM_ (TIO.hPutStrLn stderr . pack . displayException) errs
     when (not (null errs) && null contents) exitFailure
     format <- mapM compileTemplate optFormat >>= mapM handleNestedErrors
-    let template = dispatchTemplate format optMode
-    output optOutput $ runWith opts template contents
+    output optOutput $ runWith opts (dispatchTemplate format optMode) contents
 
 -- | handle options, computing actual output
 runWith :: Options -> Template -> [AgendaFile] -> Text

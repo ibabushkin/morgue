@@ -42,8 +42,9 @@ instance Monoid TimedResult where
     mempty = TimedResult M.empty
 
 instance ToJSON TimedResult where
-    toJSON (TimedResult days) = object [ "days" .= M.mapWithKey pairToJSON days ]
-        where pairToJSON day tree = object
+    toJSON (TimedResult days) = object [ "days" .= M.foldrWithKey go [] days ]
+        where go day tree res = pairToJSON day tree : res
+              pairToJSON day tree = object
                   [ "day" .= toJSON day
                   , "trees" .= toJSON tree
                   ]
