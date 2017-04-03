@@ -45,7 +45,7 @@ instance ToJSON TimedResult where
     toJSON (TimedResult days) = object [ "days" .= M.mapWithKey pairToJSON days ]
         where pairToJSON day tree = object
                   [ "day" .= toJSON day
-                  , "tree" .= toJSON tree
+                  , "trees" .= toJSON tree
                   ]
 
 -- | compute a timed agenda
@@ -72,7 +72,7 @@ newtype TodoResult = TodoResult [AgendaFile]
     deriving (Semigroup, Monoid)
 
 instance ToJSON TodoResult where
-    toJSON (TodoResult tree) = object [ "tree" .= toJSON tree ]
+    toJSON (TodoResult tree) = object [ "trees" .= toJSON tree ]
 
 -- | compute a todo agenda
 todoResult :: TodoParams -> AgendaFile -> TodoResult
@@ -120,7 +120,7 @@ newtype TreeResult = TreeResult [AgendaFile]
     deriving (Semigroup, Monoid)
 
 instance ToJSON TreeResult where
-    toJSON (TreeResult tree) = object [ "tree" .= toJSON tree ]
+    toJSON (TreeResult tree) = object [ "trees" .= toJSON tree ]
 
 -- | compute a tree agenda
 treeResult :: TreeParams -> AgendaFile -> TreeResult

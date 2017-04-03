@@ -100,8 +100,10 @@ agendaTreeToJSON n (AgendaTree e cs) = object
     ]
 
 -- | a file containing a number of agenda trees
-data AgendaFile = AgendaFile Text [AgendaTree]
-    deriving Generic
+data AgendaFile = AgendaFile
+    { fName :: Text -- ^ the name of the file
+    , trees :: [AgendaTree] -- ^ a list of agenda trees from the file
+    } deriving Generic
 
 instance ToJSON AgendaFile
 
