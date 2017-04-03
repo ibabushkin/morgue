@@ -196,16 +196,16 @@ runOpts opts@RunWith{..} files = do
 -- | handle options, computing actual output
 runWith :: Options -> Template -> [AgendaFile] -> Text
 runWith RunWith{..} template files
-    | Timed num True <- optMode =
-        toText $ map (bothResult (BothParams optDay num True (getTreeParams <$> optTags))) files
-    | Timed num False <- optMode =
-        toText $ map (timedResult (TimedParams optDay num (getTreeParams <$> optTags))) files
-    | Todo <- optMode =
-        toText $ map (todoResult (TodoParams True (getTreeParams <$> optTags))) files
+    | Timed num True <- optMode = toText $ map (bothRes num) files
+    | Timed num False <- optMode = toText $ map (timedRes num) files
+    | Todo <- optMode = toText $ map todoRes files
     | Tree <- optMode, Just (tags, inv) <- optTags =
         toText $ map (treeResult (TreeParams tags inv)) files
     | otherwise = render template $ TreeResult files
     where getTreeParams = uncurry TreeParams
+          bothRes num = bothResult (BothParams optDay num True (getTreeParams <$> optTags))
+          timedRes num = timedResult (TimedParams optDay num (getTreeParams <$> optTags))
+          todoRes = todoResult (TodoParams True (getTreeParams <$> optTags))
           toText :: (ToJSON a, Monoid a) => [a] -> Text
           toText = render template . mconcat
 runWith _ _ _ = mempty
