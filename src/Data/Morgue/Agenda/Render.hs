@@ -27,7 +27,7 @@ todoTemplate = timedTemplate { templateActual = "todo" }
 
 -- | the template to render a timed and todo agenda
 bothTemplate :: Template
-bothTemplate = timedTemplate { templateActual = "todo" }
+bothTemplate = timedTemplate { templateActual = "both" }
 
 -- | the template to render a tree agenda
 treeTemplate :: Template
