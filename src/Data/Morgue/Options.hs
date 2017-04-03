@@ -7,11 +7,12 @@ import Control.Exception (displayException, Exception(..))
 import Control.Monad (when)
 
 import Data.Aeson (ToJSON(..))
+import Data.Either (partitionEithers)
 import Data.Foldable (foldl')
 import Data.Text (Text, pack)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
-import Data.Maybe (fromMaybe, maybe, isNothing)
+import Data.Maybe (fromMaybe, maybe)
 import Data.Monoid ((<>))
 import Data.Morgue.Agenda
 import Data.Morgue.Agenda.Generator
@@ -154,12 +155,11 @@ setCustomFormat _ opts = opts
 
 -- | get the file contents to work with, including a list of I/O errors
 -- that occured and the data, if any of the sources returned some
-getFileContents :: [FilePath] -> IO ([IOError], Maybe Text)
-getFileContents files = foldr go (mempty, Nothing) <$> mapM get files
-    where get "-" = tryIOError TIO.getContents
-          get fName = tryIOError (TIO.readFile fName)
-          go (Left e) (es, res) = (e:es, res)
-          go (Right r) (es, res) = (es, Just r <> res)
+getFileContents :: [FilePath] -> IO ([IOError], [AgendaFile])
+getFileContents files = partitionEithers <$> mapM get files
+    where get fName = fmap (AgendaFile (pack fName) . getAgendaTree) <$> getText fName
+          getText "-" = tryIOError TIO.getContents
+          getText fName = tryIOError (TIO.readFile fName)
 
 -- | handle errors from two layers of exceptions caught with `try` and treat
 -- them as fatal.
@@ -188,28 +188,26 @@ runOpts Version _ = versionMessage >>= TIO.hPutStrLn stderr
 runOpts opts@RunWith{..} files = do
     (errs, contents) <- getFileContents files
     mapM_ (TIO.hPutStrLn stderr . pack . displayException) errs
-    when (not (null errs) && isNothing contents) exitFailure
+    when (not (null errs) && null contents) exitFailure
     format <- mapM compileTemplate optFormat >>= mapM handleNestedErrors
     let template = dispatchTemplate format optMode
-    case (map (runWith opts template) . getAgendaTree) <$> contents of
-      Just res -> mapM_ (output optOutput) res
-      Nothing -> TIO.hPutStrLn stderr "could not parse your markdown files"
+    output optOutput $ runWith opts template contents
 
 -- | handle options, computing actual output
-runWith :: Options -> Template -> AgendaTree -> Text
-runWith RunWith{..} template tree
+runWith :: Options -> Template -> [AgendaFile] -> Text
+runWith RunWith{..} template files
     | Timed num True <- optMode =
-        toText $ bothResult (BothParams optDay num True (getTreeParams <$> optTags)) tree
+        toText $ map (bothResult (BothParams optDay num True (getTreeParams <$> optTags))) files
     | Timed num False <- optMode =
-        toText $ timedResult (TimedParams optDay num (getTreeParams <$> optTags)) tree
+        toText $ map (timedResult (TimedParams optDay num (getTreeParams <$> optTags))) files
     | Todo <- optMode =
-        toText $ todoResult (TodoParams True (getTreeParams <$> optTags)) tree
+        toText $ map (todoResult (TodoParams True (getTreeParams <$> optTags))) files
     | Tree <- optMode, Just (tags, inv) <- optTags =
-        toText $ treeResult (TreeParams tags inv) tree
-    | otherwise = toText . TreeResult $ Just tree
+        toText $ map (treeResult (TreeParams tags inv)) files
+    | otherwise = render template $ TreeResult files
     where getTreeParams = uncurry TreeParams
-          toText :: ToJSON a => a -> Text
-          toText = render template
+          toText :: (ToJSON a, Monoid a) => [a] -> Text
+          toText = render template . mconcat
 runWith _ _ _ = mempty
 
 -- | dispatch the output to an appropriate place

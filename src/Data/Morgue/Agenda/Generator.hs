@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Data.Morgue.Agenda.Generator 
     ( TimedParams(..)
@@ -15,11 +16,15 @@ module Data.Morgue.Agenda.Generator
     , treeResult
     ) where
 
+import Control.Monad ((>=>))
+
 import Data.Aeson
 import Data.List (intersect)
-import Data.Maybe (mapMaybe)
+import qualified Data.Map as M
+import Data.Maybe (mapMaybe, maybeToList)
 import Data.Morgue.Agenda.Time
 import Data.Morgue.Agenda.Types
+import Data.Semigroup
 
 import GHC.Generics
 
@@ -27,23 +32,31 @@ import GHC.Generics
 data TimedParams = TimedParams Day Integer (Maybe TreeParams)
 
 -- | the result of a timed agenda
-newtype TimedResult = TimedResult [(Day, Maybe AgendaTree)]
+newtype TimedResult = TimedResult (M.Map Day [AgendaFile])
+
+instance Semigroup TimedResult where
+    (TimedResult m1) <> (TimedResult m2) = TimedResult $ M.unionWith (<>) m1 m2
+
+instance Monoid TimedResult where
+    mappend = (<>)
+    mempty = TimedResult M.empty
 
 instance ToJSON TimedResult where
-    toJSON (TimedResult days) = object [ "days" .= map pairToJSON days ]
-        where pairToJSON (day, tree) = object
+    toJSON (TimedResult days) = object [ "days" .= M.mapWithKey pairToJSON days ]
+        where pairToJSON day tree = object
                   [ "day" .= toJSON day
                   , "tree" .= toJSON tree
                   ]
 
 -- | compute a timed agenda
-timedResult :: TimedParams -> AgendaTree -> TimedResult
-timedResult (TimedParams day n tP) t =
-    TimedResult $ map ((,) <$> id <*> computeTree t tP) (consecutiveDays day n)
-    where computeTree tree (Just treeParams) d = treeAgenda treeParams tree >>=
-              filterAgendaTree (agendaTreeFilterTimed False d)
-          computeTree tree Nothing d =
-              filterAgendaTree (agendaTreeFilterTimed False d) tree
+timedResult :: TimedParams -> AgendaFile -> TimedResult
+timedResult (TimedParams day n treeParams) file =
+    TimedResult . M.map (maybeToList . computeTrees treeParams) . M.fromDistinctAscList $
+        zip days days
+    where days = consecutiveDays day n
+          timeFilter = filterAgendaTree . agendaTreeFilterTimed False
+          computeTrees (Just tP) d = liftFile (treeAgenda tP >=> timeFilter d) file
+          computeTrees Nothing d = liftFile (timeFilter d) file
 
 -- | a filter to be used to filter for subtrees denoting elements relevant on a given day
 agendaTreeFilterTimed :: Bool -> Day -> AgendaElement -> AgendaTreeFilter
@@ -55,17 +68,18 @@ agendaTreeFilterTimed showOverdue day element
 data TodoParams = TodoParams Bool (Maybe TreeParams)
 
 -- | the result of a todo agenda
-newtype TodoResult = TodoResult (Maybe AgendaTree)
+newtype TodoResult = TodoResult [AgendaFile]
+    deriving (Semigroup, Monoid)
 
 instance ToJSON TodoResult where
     toJSON (TodoResult tree) = object [ "tree" .= toJSON tree ]
 
 -- | compute a todo agenda
-todoResult :: TodoParams -> AgendaTree -> TodoResult
-todoResult (TodoParams showDone (Just tP)) tree =
-    TodoResult $ treeAgenda tP tree >>= filterAgendaTree (agendaTreeFilterTodo showDone)
-todoResult (TodoParams showDone Nothing) tree =
-    TodoResult $ filterAgendaTree (agendaTreeFilterTodo showDone) tree
+todoResult :: TodoParams -> AgendaFile -> TodoResult
+todoResult (TodoParams showDone (Just tP)) file = TodoResult . maybeToList $
+    liftFile (filterAgendaTree (agendaTreeFilterTodo showDone) >=> treeAgenda tP) file
+todoResult (TodoParams showDone Nothing) tree = TodoResult . maybeToList $
+    liftFile (filterAgendaTree (agendaTreeFilterTodo showDone)) tree
 
 -- | a filter for subtrees denoting todo elements
 agendaTreeFilterTodo :: Bool -> AgendaElement -> AgendaTreeFilter
@@ -83,10 +97,18 @@ data BothResult = BothResult
     , todo :: TodoResult
     } deriving Generic
 
+instance Semigroup BothResult where
+    (BothResult timed1 todo1) <> (BothResult timed2 todo2) =
+        BothResult (timed1 <> timed2) (todo1 <> todo2)
+
+instance Monoid BothResult where
+    mappend = (<>)
+    mempty = BothResult mempty mempty
+
 instance ToJSON BothResult
 
 -- | compute a both agenda
-bothResult :: BothParams -> AgendaTree -> BothResult
+bothResult :: BothParams -> AgendaFile -> BothResult
 bothResult (BothParams day n sD tP) =
     BothResult <$> timedResult (TimedParams day n tP) <*> todoResult (TodoParams sD tP)
 
@@ -94,14 +116,15 @@ bothResult (BothParams day n sD tP) =
 data TreeParams = TreeParams [Tag] Bool
 
 -- | the result of a tree agenda
-newtype TreeResult = TreeResult (Maybe AgendaTree)
+newtype TreeResult = TreeResult [AgendaFile]
+    deriving (Semigroup, Monoid)
 
 instance ToJSON TreeResult where
     toJSON (TreeResult tree) = object [ "tree" .= toJSON tree ]
 
 -- | compute a tree agenda
-treeResult :: TreeParams -> AgendaTree -> TreeResult
-treeResult tP = TreeResult . treeAgenda tP
+treeResult :: TreeParams -> AgendaFile -> TreeResult
+treeResult tP = TreeResult . maybeToList . liftFile (treeAgenda tP)
 
 -- | filter an AgendaTree by tags
 treeAgenda :: TreeParams -> AgendaTree -> Maybe AgendaTree

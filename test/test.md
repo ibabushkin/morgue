@@ -1,7 +1,7 @@
 # This is a heading
 * some note
-* other note
-  * subnote 1
+* [ ] other note
+  * [ ] subnote 1
   * subnote 2
 
 ## second level heading

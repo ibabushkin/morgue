@@ -33,6 +33,7 @@ library
   build-depends:     aeson >= 1.0.2.1,
                      base >= 4.9,
                      cmark >= 0.5.3.1,
+                     containers >= 0.5.7.1,
                      megaparsec >= 5.1,
                      stache >= 0.2.0,
                      text >= 1.2.2.1,

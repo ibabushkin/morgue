@@ -4,6 +4,7 @@
 module Data.Morgue.Agenda.Types where
 
 import Data.Aeson
+import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time.LocalTime (LocalTime)
@@ -97,6 +98,18 @@ agendaTreeToJSON n (AgendaTree e cs) = object
     , "indent" .= T.replicate (fromIntegral n) " "
     , "children" .= map (agendaTreeToJSON (n + 1)) cs
     ]
+
+-- | a file containing a number of agenda trees
+data AgendaFile = AgendaFile Text [AgendaTree]
+    deriving Generic
+
+instance ToJSON AgendaFile
+
+liftFile :: (AgendaTree -> Maybe AgendaTree) -> AgendaFile -> Maybe AgendaFile
+liftFile f (AgendaFile name trees) =
+    case mapMaybe f trees of
+      [] -> Nothing
+      ts -> Just $ AgendaFile name ts
 
 -- | the kinds of agenda we can get
 data AgendaMode
