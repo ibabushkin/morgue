@@ -60,7 +60,7 @@ dispatchTemplate :: OutputFormat Template -> AgendaMode -> Template
 dispatchTemplate (Custom template) _ = template
 dispatchTemplate _ (Timed _ both)
     | both = bothTemplate
-    | otherwise = todoTemplate
+    | otherwise = timedTemplate
 dispatchTemplate _ Todo = todoTemplate
 dispatchTemplate _ Tree = treeTemplate
 
