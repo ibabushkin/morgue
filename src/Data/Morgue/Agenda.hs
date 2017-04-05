@@ -6,7 +6,6 @@ import CMark
 import Control.Applicative ((<|>), optional)
 import Control.Monad (mzero)
 
---import Data.Attoparsec.Text
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Morgue.Agenda.Types
 import Data.Text (Text, pack, stripSuffix)
@@ -34,7 +33,10 @@ parseMarkdown = commonmarkToNode commonmarkOptions
 
 -- | get a textual representation of a markdown AST segment
 formatMarkdown :: Node -> Text
-formatMarkdown = T.filter (/= '\\') . nodeToCommonmark commonmarkOptions Nothing
+formatMarkdown = stripNewline . clean . nodeToCommonmark commonmarkOptions Nothing
+    where stripNewline "\n" = "\n"
+          stripNewline s = fromMaybe s (stripSuffix "\n" s)
+          clean = T.filter (/= '\\')
 
 -- | restructure the AST to make it... easier to process
 splitByHeading :: Level -> [Node] -> [[Node]]
@@ -77,8 +79,7 @@ getSubtree = pure . concatMap buildTree
 
 -- | get the text from a paragraph
 getParagraphText :: [Node] -> Text
-getParagraphText =
-    (fromMaybe <$> id <*> stripSuffix "\n") . mconcat . map formatMarkdown
+getParagraphText = mconcat . map formatMarkdown
 
 -- | wrap the agenda element description parser
 parseElement :: Text -> Maybe AgendaElement
@@ -93,8 +94,8 @@ elementP = do
     td <- optional (checkboxP <* space)
     ts <- optional (try timestampP <* space)
     tg <- fromMaybe [] <$> optional (tagsP <* space)
-    de <- pack <$> some anyChar -- TODO: no pack
-    return $ Elem de td ts tg
+    de <- getInput
+    return $ Elem (T.lines de) td ts tg
 
 -- | parse a checkbox from an agenda entry description
 checkboxP :: Parser Bool

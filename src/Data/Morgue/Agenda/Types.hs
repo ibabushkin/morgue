@@ -59,7 +59,7 @@ instance ToJSON Timestamp
 
 -- | the data type used to hold an element of an agenda  
 data AgendaElement = Elem
-    { description :: Text -- ^ the textual content of the agenda element
+    { description :: [Text] -- ^ the textual content of the agenda element, split by lines
     , toDo :: Maybe Bool -- ^ an optional todo status
     , time :: Maybe Timestamp -- ^ an optional timestamp
     , tags :: [Tag] -- ^ an optional set of tags
