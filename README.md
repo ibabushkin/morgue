@@ -51,9 +51,6 @@ See it's readme for more details on usage and features.
 
 And it's quite fast, due to the fact that it's written in Haskell.
 
-### A screenshot
-![ansi agenda and vim](http://www.github.com/ibabushkin/morgue/raw/master/ansi_agenda_and_vim.png)
-
 ## Rules for agenda generation
 
 * Timestamps are in the format presented below (used by the Vim plugin, too), see examples
@@ -80,14 +77,18 @@ be included.
 
 # Installation
 
-Just do the following, assuming you have `ghc` and `cabal` installed:
+Just do the following, assuming you have `ghc` and `stack` installed:
 ```
-$ cd morgue/agenda
-$ cabal install
+$ git clone morgue
+$ cd morgue
+$ git checkout stable # for the featureset described above
+$ stack install
 ``` 
-Then add `~/.cabal/bin` to your `$PATH` if you haven't already.
+Then add `~/.stack/local/bin` to your `$PATH` if you haven't already.
 Now run `morgue -h`/`morgue-outline -h` for usage information.
 
 # TODO
-
-* improve README with images / screenshots
+There is currently a rewrite underway, which reduces the number of dependencies and allows
+for a more tree-like document structure visible in the agenda. If you want to experiment
+with it, see the master branch. It does not, however, currently support different output
+formats or outlining, and the new templating mechanisms are still being worked on.
