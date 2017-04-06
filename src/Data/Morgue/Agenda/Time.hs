@@ -21,7 +21,7 @@ getCurrentDay = extractDay <$> getZonedTime
 -- | get a list of n consecutive points in time, each one day apart,
 -- starting from the given day
 consecutiveDays :: Day -> Integer -> [Day]
-consecutiveDays day n = map (`addDays` day) [0..n]
+consecutiveDays day n = map (`addDays` day) [0..n-1]
 
 -- | get the next matching timestamp for a timestamp, if it specifies
 -- a repetition interval
