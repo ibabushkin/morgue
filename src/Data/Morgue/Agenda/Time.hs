@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Data.Morgue.Agenda.Time
     ( getCurrentDay
     , consecutiveDays
@@ -5,12 +6,17 @@ module Data.Morgue.Agenda.Time
     , getDay
     , isOverdue
     , isRelevant
+    , formatDay
     , module Calendar
     , module LocalTime
+    , module OrdinalDate
     ) where
 
+import Data.Monoid ((<>))
 import Data.Morgue.Agenda.Types
+import Data.Text (Text, pack)
 import Data.Time.Calendar as Calendar
+import Data.Time.Calendar.OrdinalDate as OrdinalDate
 import Data.Time.LocalTime as LocalTime
 
 -- | get the current Day
@@ -51,3 +57,17 @@ isRelevant day (Elem _ _ (Just ts) _) = repeatValid ts
               | getDay current > day = False
               | otherwise = True
 isRelevant _ _ = False
+
+-- | format a day
+formatDay :: Day -> Text
+formatDay = combine <$> toText . snd . OrdinalDate.mondayStartWeek <*> pack . show
+    where combine first second = first <> ", " <> second
+          -- TODO: this should be cleaner
+          toText 1 = "Monday"
+          toText 2 = "Tuesday"
+          toText 3 = "Wednesday"
+          toText 4 = "Thursday"
+          toText 5 = "Friday"
+          toText 6 = "Saturday"
+          toText 7 = "Sunday"
+          toText _ = "Boomtime!! (this is a bug)"

@@ -45,8 +45,8 @@ instance ToJSON TimedResult where
     toJSON (TimedResult days) = object [ "days" .= M.foldrWithKey go [] days ]
         where go day tree res = pairToJSON day tree : res
               pairToJSON day tree = object
-                  [ "day" .= toJSON day
-                  , "trees" .= toJSON tree
+                  [ "day" .= formatDay day
+                  , "trees" .= tree
                   ]
 
 -- | compute a timed agenda

@@ -7,7 +7,7 @@ import Data.Aeson
 import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time.LocalTime (LocalTime)
+import Data.Time.LocalTime (LocalTime, localTimeOfDay)
 
 import GHC.Generics
 
@@ -48,14 +48,19 @@ instance ToJSON RepeatInterval
 data Timestamp = Timestamp
     { timeValue :: LocalTime -- ^ the actual time of the timestamp
     , mode :: TimeMode -- ^ the mode of the timestamp
-    , repeat :: Maybe RepeatInterval -- ^ an optional repetition specifier
+    , repeatInt :: Maybe RepeatInterval -- ^ an optional repetition specifier
     , toPrint :: Bool -- ^ whether the *time* is set explicitly
     } deriving (Generic, Show, Eq)
 
 instance Ord Timestamp where
     (<=) (Timestamp a _ _ _) (Timestamp b _ _ _) = a <= b
 
-instance ToJSON Timestamp
+instance ToJSON Timestamp where
+    toJSON Timestamp{..} = object
+        [ "timeValue" .= localTimeOfDay timeValue
+        , "mode" .= mode
+        , "toPrint" .= toPrint
+        ]
 
 -- | the data type used to hold an element of an agenda  
 data AgendaElement = Elem
