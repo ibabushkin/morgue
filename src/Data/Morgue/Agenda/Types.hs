@@ -5,6 +5,7 @@ module Data.Morgue.Agenda.Types where
 
 import Data.Aeson
 import Data.Maybe (mapMaybe)
+import Data.Semigroup
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time.LocalTime (LocalTime, localTimeOfDay)
@@ -61,6 +62,43 @@ instance ToJSON Timestamp where
         , "mode" .= mode
         , "toPrint" .= toPrint
         ]
+
+-- | a data block describing the timespan covered by a timed agenda, in week numbers
+data WeekInfo
+    = OneWeek Int -- ^ the timespan fits into the given week
+    | MultipleWeeks Int Int -- ^ the timespan overlaps with these two weeks
+    | NoWeeks -- ^ edge case: the timespan spans no days at all
+    deriving (Generic, Show, Eq)
+
+instance ToJSON WeekInfo where
+    toJSON (OneWeek w) = object [ "week" .= w ]
+    toJSON (MultipleWeeks w1 w2) = object [ "week" .= w1, "week2" .= w2 ]
+    toJSON NoWeeks = Null
+
+instance Semigroup WeekInfo where
+    NoWeeks <> r = r
+    r <> NoWeeks = r
+    (OneWeek l) <> (OneWeek r)
+        | l < r = MultipleWeeks l r
+        | l > r = MultipleWeeks r l
+        | otherwise = OneWeek l
+    (MultipleWeeks l1 l2) <> (MultipleWeeks r1 r2)
+        | l1 <= r1 && l2 <= r2 = MultipleWeeks l1 r2
+        | l1 <= r1 && l2 >  r2 = MultipleWeeks l1 l2
+        | l1 >  r1 && l2 <= r2 = MultipleWeeks r1 r2
+        | l1 >  r1 && l2 >  r2 = MultipleWeeks r1 l2
+    (MultipleWeeks l1 l2) <> (OneWeek r)
+        | r < l1 = MultipleWeeks r l2
+        | r > l2 = MultipleWeeks l1 r
+        | otherwise = MultipleWeeks l1 l2
+    (OneWeek l) <> (MultipleWeeks r1 r2)
+        | l < r1 = MultipleWeeks l r2
+        | l > r2 = MultipleWeeks r1 l
+        | otherwise = MultipleWeeks r1 r2
+
+instance Monoid WeekInfo where
+    mempty = NoWeeks
+    mappend = (<>)
 
 -- | the data type used to hold an element of an agenda  
 data AgendaElement = Elem

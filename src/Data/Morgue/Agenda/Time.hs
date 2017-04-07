@@ -7,6 +7,7 @@ module Data.Morgue.Agenda.Time
     , isOverdue
     , isRelevant
     , formatDay
+    , toWeekInfo
     , module Calendar
     , module LocalTime
     , module OrdinalDate
@@ -71,3 +72,13 @@ formatDay = combine <$> toText . snd . OrdinalDate.mondayStartWeek <*> pack . sh
           toText 6 = "Saturday"
           toText 7 = "Sunday"
           toText _ = "Boomtime!! (this is a bug)"
+
+-- | construct a week information record from two days
+toWeekInfo :: Maybe (Day, Day) -> WeekInfo
+toWeekInfo (Just (f, l))
+    | week1 < week2 = MultipleWeeks week1 week2
+    | week1 > week2 = MultipleWeeks week2 week1
+    | otherwise = OneWeek week1
+    where (week1, _) = mondayStartWeek f
+          (week2, _) = mondayStartWeek l
+toWeekInfo Nothing = NoWeeks
