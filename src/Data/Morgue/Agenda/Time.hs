@@ -13,11 +13,11 @@ module Data.Morgue.Agenda.Time
     , module OrdinalDate
     ) where
 
-import Data.Monoid ((<>))
 import Data.Morgue.Agenda.Types
 import Data.Text (Text, pack)
 import Data.Time.Calendar as Calendar
 import Data.Time.Calendar.OrdinalDate as OrdinalDate
+import Data.Time.Format (formatTime, defaultTimeLocale)
 import Data.Time.LocalTime as LocalTime
 
 -- | get the current Day
@@ -61,17 +61,7 @@ isRelevant _ _ = False
 
 -- | format a day
 formatDay :: Day -> Text
-formatDay = combine <$> toText . snd . OrdinalDate.mondayStartWeek <*> pack . show
-    where combine first second = first <> ", " <> second
-          -- TODO: this should be cleaner
-          toText 1 = "Monday"
-          toText 2 = "Tuesday"
-          toText 3 = "Wednesday"
-          toText 4 = "Thursday"
-          toText 5 = "Friday"
-          toText 6 = "Saturday"
-          toText 7 = "Sunday"
-          toText _ = "Boomtime!! (this is a bug)"
+formatDay = pack . formatTime defaultTimeLocale "%A, %F"
 
 -- | construct a week information record from two days
 toWeekInfo :: Maybe (Day, Day) -> WeekInfo

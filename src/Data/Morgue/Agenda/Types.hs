@@ -8,7 +8,8 @@ import Data.Maybe (mapMaybe)
 import Data.Semigroup
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time.LocalTime (LocalTime, localTimeOfDay)
+import Data.Time.LocalTime (LocalTime)
+import Data.Time.Format (formatTime, defaultTimeLocale)
 
 import GHC.Generics
 
@@ -58,7 +59,7 @@ instance Ord Timestamp where
 
 instance ToJSON Timestamp where
     toJSON Timestamp{..} = object
-        [ "timeValue" .= localTimeOfDay timeValue
+        [ "timeValue" .= formatTime defaultTimeLocale "%R" timeValue
         , "mode" .= mode
         , "toPrint" .= toPrint
         ]
