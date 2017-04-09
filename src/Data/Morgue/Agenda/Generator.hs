@@ -35,10 +35,11 @@ data TimedParams = TimedParams Day Integer (Maybe TreeParams)
 
 -- | the result of a timed agenda
 data TimedResult = TimedResult WeekInfo (M.Map Day [AgendaFile])
+    deriving (Eq, Show)
 
 instance Semigroup TimedResult where
     (TimedResult w1 m1) <> (TimedResult w2 m2) =
-        TimedResult (w1 <> w2) $ M.unionWith (<>) m1 m2
+        TimedResult (w1 <> w2) (M.unionWith (<>) m1 m2)
 
 instance Monoid TimedResult where
     mappend = (<>)
@@ -77,7 +78,7 @@ data TodoParams = TodoParams Bool (Maybe TreeParams)
 
 -- | the result of a todo agenda
 newtype TodoResult = TodoResult [AgendaFile]
-    deriving (Semigroup, Monoid)
+    deriving (Eq, Semigroup, Show, Monoid)
 
 instance ToJSON TodoResult where
     toJSON (TodoResult tree) = object [ "trees" .= toJSON tree ]
@@ -125,7 +126,7 @@ data TreeParams = TreeParams [Tag] Bool
 
 -- | the result of a tree agenda
 newtype TreeResult = TreeResult [AgendaFile]
-    deriving (Semigroup, Monoid)
+    deriving (Eq, Semigroup, Show, Monoid)
 
 instance ToJSON TreeResult where
     toJSON (TreeResult tree) = object [ "trees" .= toJSON tree ]

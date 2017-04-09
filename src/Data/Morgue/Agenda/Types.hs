@@ -15,7 +15,7 @@ import GHC.Generics
 
 -- | tags are just text values "attached" to agenda elements
 newtype Tag = Tag Text
-    deriving (Generic, Show, Eq)
+    deriving (Eq, Generic, Show)
 
 instance ToJSON Tag
 
@@ -24,7 +24,7 @@ data TimeMode
     = Time -- ^ an event
     | Deadline -- ^ a task's deadline
     | Scheduled -- ^ a scheduled task
-    deriving (Generic, Show, Eq)
+    deriving (Eq, Generic, Show)
 
 instance ToJSON TimeMode
 
@@ -34,7 +34,7 @@ data TimeStep
     | Week -- ^ a week (that is, 7 days for those who're unaware)
     | Month -- ^ a month in the gregorian calendar
     | Year -- ^ a year in the gregorian calendar
-    deriving (Generic, Show, Eq)
+    deriving (Eq, Generic, Show)
 
 instance ToJSON TimeStep
 
@@ -42,7 +42,7 @@ instance ToJSON TimeStep
 data RepeatInterval = Interval
     { numSteps :: Integer -- ^ the number of time steps
     , lenSteps :: TimeStep -- ^ the length of the step
-    } deriving (Generic, Show, Eq)
+    } deriving (Eq, Generic, Show)
 
 instance ToJSON RepeatInterval
 
@@ -52,7 +52,7 @@ data Timestamp = Timestamp
     , mode :: TimeMode -- ^ the mode of the timestamp
     , repeatInt :: Maybe RepeatInterval -- ^ an optional repetition specifier
     , toPrint :: Bool -- ^ whether the *time* is set explicitly
-    } deriving (Generic, Show, Eq)
+    } deriving (Eq, Generic, Show)
 
 instance Ord Timestamp where
     (<=) (Timestamp a _ _ _) (Timestamp b _ _ _) = a <= b
@@ -69,7 +69,7 @@ data WeekInfo
     = OneWeek Int -- ^ the timespan fits into the given week
     | MultipleWeeks Int Int -- ^ the timespan overlaps with these two weeks
     | NoWeeks -- ^ edge case: the timespan spans no days at all
-    deriving (Generic, Show, Eq)
+    deriving (Eq, Generic, Show)
 
 instance ToJSON WeekInfo where
     toJSON (OneWeek w) = object [ "week" .= w ]
@@ -107,7 +107,7 @@ data AgendaElement = Elem
     , toDo :: Maybe Bool -- ^ an optional todo status
     , time :: Maybe Timestamp -- ^ an optional timestamp
     , tags :: [Tag] -- ^ an optional set of tags
-    } deriving (Generic, Show, Eq)
+    } deriving (Eq, Generic, Show)
 
 instance Ord AgendaElement where
     (<=) (Elem _ _ a _) (Elem _ _ b _) = a <= b
@@ -129,7 +129,7 @@ toDoToJSON (Just val)
 
 -- | a tree of hierarchically ordered agenda elements of any type
 data AgendaTree = AgendaTree AgendaElement [AgendaTree]
-    deriving (Show, Eq)
+    deriving (Eq, Show)
 
 instance ToJSON AgendaTree where
     toJSON = agendaTreeToJSON 0
@@ -147,7 +147,7 @@ agendaTreeToJSON n (AgendaTree e cs) = object
 data AgendaFile = AgendaFile
     { fName :: Text -- ^ the name of the file
     , trees :: [AgendaTree] -- ^ a list of agenda trees from the file
-    } deriving Generic
+    } deriving (Eq, Generic, Show)
 
 instance ToJSON AgendaFile
 
@@ -162,7 +162,7 @@ data AgendaMode
     = Timed Integer Bool -- ^ a timed agenda
     | Todo -- ^ a simple tree of todo items
     | Tree -- ^ a simple tree of all items
-    deriving (Show, Eq)
+    deriving (Eq, Show)
 
 -- | the result type represnting an action to take when walking an `AgendaTree`
 data AgendaTreeFilter
@@ -170,4 +170,4 @@ data AgendaTreeFilter
     | DropTree -- ^ drop the complete current tree, with no further checks
     | KeepTreeAndWalk -- ^ keep the current node, but check subtrees
     | DropTreeAndWalk -- ^ drop the current node, but check subtrees
-    deriving (Show, Eq)
+    deriving (Eq, Show)

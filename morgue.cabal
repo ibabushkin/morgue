@@ -77,4 +77,5 @@ test-suite spec
                      morgue,
                      stache,
                      hspec,
-                     QuickCheck
+                     QuickCheck,
+                     quickcheck-instances
