@@ -13,7 +13,7 @@ spec = describe "Data.Morgue.Agenda/ToJSON"
 agendaTreeSpec :: Spec
 agendaTreeSpec = describe "AgendaTree" $
     it "renders to proper JSON" $
-        renderJSON (AgendaTree (Elem "root" Nothing Nothing []) []) `shouldBe`
+        renderJSON (AgendaTree (Elem ["root"] Nothing Nothing []) []) `shouldBe`
             "{\"children\":[]\
             \,\"indent\":0\
             \,\"element\":\
