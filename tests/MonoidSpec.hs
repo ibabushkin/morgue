@@ -48,6 +48,9 @@ instance Arbitrary TodoParams where
 instance Arbitrary TodoResult where
     arbitrary = TodoResult <$> arbitrary
 
+instance Arbitrary BothResult where
+    arbitrary = BothResult <$> arbitrary <*> arbitrary
+
 spec :: Spec
 spec = describe "Data.Morgue.Agenda Monoid instances" $ do
     describe "Data.Morgue.Agenda.Types" weekInfoSpec
@@ -55,7 +58,7 @@ spec = describe "Data.Morgue.Agenda Monoid instances" $ do
         treeResultSpec
         todoResultSpec
         timedResultSpec
-        -- bothResultSpec
+        bothResultSpec
 
 neutrality :: (Eq a, Monoid a) => a -> Bool
 neutrality a = a <> mempty == a && mempty <> a == a
@@ -94,3 +97,10 @@ timedResultSpec = describe "Data.Morgue.Agenda.Generator.TimedResult" $ do
         \r@TimedResult{} -> neutrality r
     it "respects associativity" $ property $
         \r1@TimedResult{} r2@TimedResult{} r3@TimedResult{} -> associativity r1 r2 r3
+
+bothResultSpec :: Spec
+bothResultSpec = describe "Data.Morgue.Agenda.Generator.BothResult" $ do
+    it "has a proper neutral element" $ property $
+        \r@BothResult{} -> neutrality r
+    it "respects associativity" $ property $
+        \r1@BothResult{} r2@BothResult{} r3@BothResult{} -> associativity r1 r2 r3

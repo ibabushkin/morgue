@@ -104,7 +104,7 @@ data BothParams = BothParams Day Integer Bool (Maybe TreeParams)
 data BothResult = BothResult
     { timed :: TimedResult
     , todo :: TodoResult
-    } deriving Generic
+    } deriving (Eq, Generic, Show)
 
 instance Semigroup BothResult where
     (BothResult timed1 todo1) <> (BothResult timed2 todo2) =
