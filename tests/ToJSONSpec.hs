@@ -15,7 +15,7 @@ agendaTreeSpec = describe "AgendaTree" $
     it "renders to proper JSON" $
         renderJSON (AgendaTree (Elem ["root"] Nothing Nothing []) []) `shouldBe`
             "{\"children\":[]\
-            \,\"indent\":0\
+            \,\"indent\":\"\"\
             \,\"element\":\
-                \{\"time\":null,\"toDo\":null,\"description\":\"root\",\"tags\":[]}\
+                \{\"time\":null,\"toDo\":null,\"description\":[\"root\"],\"tags\":[]}\
             \}"
