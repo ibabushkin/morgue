@@ -28,44 +28,43 @@ import Data.Semigroup
 
 import GHC.Generics
 
-import Safe
-
 -- | the parameters passed to a timed agenda
 data TimedParams = TimedParams Day Integer (Maybe TreeParams)
 
 -- | the result of a timed agenda
-data TimedResult = TimedResult WeekInfo (M.Map Day [AgendaFile])
+newtype TimedResult = TimedResult (M.Map Day [AgendaFile])
     deriving (Eq, Show)
 
 instance Semigroup TimedResult where
-    (TimedResult w1 m1) <> (TimedResult w2 m2) =
-        TimedResult (w1 <> w2) (M.unionWith (<>) m1 m2)
+    (TimedResult m1) <> (TimedResult m2) = TimedResult $ M.unionWith (<>) m1 m2
 
 instance Monoid TimedResult where
     mappend = (<>)
-    mempty = TimedResult mempty mempty
+    mempty = TimedResult mempty
 
 instance ToJSON TimedResult where
-    toJSON (TimedResult weekInfo days) = object
+    toJSON (TimedResult days) = object
         [ "days" .= M.foldrWithKey go [] days
-        , "week" .= weekInfo
+        , "week" .= toWeekInfo ((,) <$> safeGet M.findMin <*> safeGet M.findMax)
         ]
         where go day tree res = pairToJSON day tree : res
               pairToJSON day tree = object
                   [ "day" .= formatDay day
                   , "trees" .= tree
                   ]
+              safeGet fun
+                  | null days = Nothing
+                  | otherwise = Just . fst $ fun days
 
 -- | compute a timed agenda
 timedResult :: TimedParams -> AgendaFile -> TimedResult
 timedResult (TimedParams day n treeParams) file =
-    TimedResult wI . M.map (maybeToList . computeTrees treeParams) .  M.fromDistinctAscList $
+    TimedResult . M.map (maybeToList . computeTrees treeParams) .  M.fromDistinctAscList $
         zip days days
     where days = consecutiveDays day n
           timeFilter = filterAgendaTree . agendaTreeFilterTimed False
           computeTrees (Just tP) d = liftFile (treeAgenda tP >=> timeFilter d) file
           computeTrees Nothing d = liftFile (timeFilter d) file
-          wI = toWeekInfo $ (,) <$> headMay days <*> lastMay days
 
 -- | a filter to be used to filter for subtrees denoting elements relevant on a given day
 agendaTreeFilterTimed :: Bool -> Day -> AgendaElement -> AgendaTreeFilter

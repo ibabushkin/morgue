@@ -66,9 +66,8 @@ formatDay = pack . formatTime defaultTimeLocale "%A, %F"
 -- | construct a week information record from two days
 toWeekInfo :: Maybe (Day, Day) -> WeekInfo
 toWeekInfo (Just (f, l))
-    | week1 < week2 = MultipleWeeks week1 week2
-    | week1 > week2 = MultipleWeeks week2 week1
-    | otherwise = OneWeek week1
+    | week1 == week2 = OneWeek week1
+    | otherwise = MultipleWeeks week1 week2
     where (week1, _) = mondayStartWeek f
           (week2, _) = mondayStartWeek l
 toWeekInfo Nothing = NoWeeks
