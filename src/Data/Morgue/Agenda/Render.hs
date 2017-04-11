@@ -5,12 +5,11 @@ module Data.Morgue.Agenda.Render where
 
 import Control.Exception (try)
 
-import Data.Aeson (ToJSON(..), encode)
+import Data.Aeson (ToJSON(..))
 import Data.Maybe (fromMaybe)
 import Data.Morgue.Agenda.Types
 import Data.Text (Text, stripSuffix)
 import Data.Text.Lazy (toStrict)
-import Data.Text.Lazy.Encoding (decodeUtf8)
 
 import System.IO.Error (tryIOError)
 
@@ -18,20 +17,23 @@ import Text.Mustache
 import qualified Text.Mustache.Compile.TH as TH
 
 -- | the template to render a timed agenda
-timedTemplate :: Template
-timedTemplate = cleanTemplate $(TH.compileMustacheDir "timed" "templates/")
+timedTemplate :: OutputFormat Template -> Template
+timedTemplate Plain = cleanTemplate $(TH.compileMustacheDir "timed" "templates/plain")
+timedTemplate Colored = cleanTemplate $(TH.compileMustacheDir "timed" "templates/colored")
+timedTemplate Pango = cleanTemplate $(TH.compileMustacheDir "timed" "templates/pango")
+timedTemplate (Custom template) = cleanTemplate template
 
 -- | the template to render a todo agenda
-todoTemplate :: Template
-todoTemplate = timedTemplate { templateActual = "todo" }
+todoTemplate :: OutputFormat Template -> Template
+todoTemplate format = (timedTemplate format) { templateActual = "todo" }
 
 -- | the template to render a timed and todo agenda
-bothTemplate :: Template
-bothTemplate = timedTemplate { templateActual = "both" }
+bothTemplate :: OutputFormat Template -> Template
+bothTemplate format = (timedTemplate format) { templateActual = "both" }
 
 -- | the template to render a tree agenda
-treeTemplate :: Template
-treeTemplate = timedTemplate { templateActual = "tree" }
+treeTemplate :: OutputFormat Template -> Template
+treeTemplate format = (timedTemplate format) { templateActual = "tree" }
 
 -- | "clean" a template - that is, remove trailing newlines that are around because we
 -- read from a file created by a human
@@ -44,28 +46,23 @@ cleanTemplate (Template a c) = Template a (clean <$> c)
 -- | the format to be used when outputting a filtered tree
 data OutputFormat a
     = Plain -- ^ plain text. boring, but reliable (and machine-readable)
+    | Colored  -- ^ colored plain text. not as boring
     | Pango -- ^ pango markup. useful for awesomewm or dunst notifications
-    | ANSI  -- ^ colored plain text. not as boring
     | Custom a -- ^ custom mustache template passed, represented by some type
     deriving (Show, Eq, Foldable, Functor, Traversable)
 
 -- | compile a template from a path, catching exceptions.
 compileTemplate :: FilePath
                 -> IO (Either IOError (Either MustacheException Template))
-compileTemplate = tryIOError . try . compileMustacheDir "main"
+compileTemplate = tryIOError . try . compileMustacheDir "timed"
 
 -- | get a template according to output format and agenda mode
--- TODO: set the custom template entry point to use here!
 dispatchTemplate :: OutputFormat Template -> AgendaMode -> Template
-dispatchTemplate (Custom template) _ = template
-dispatchTemplate _ (Timed _ both)
-    | both = bothTemplate
-    | otherwise = timedTemplate
-dispatchTemplate _ Todo = todoTemplate
-dispatchTemplate _ Tree = treeTemplate
+dispatchTemplate format (Timed _ both)
+    | both = bothTemplate format
+    | otherwise = timedTemplate format
+dispatchTemplate format Todo = todoTemplate format
+dispatchTemplate format Tree = treeTemplate format
 
 render :: ToJSON a => Template -> a -> Text
 render template = toStrict . renderMustache template . toJSON
-
-renderJSON :: ToJSON a => a -> Text
-renderJSON = toStrict . decodeUtf8 . encode . toJSON

@@ -53,7 +53,7 @@ data Options
 -- * no tag filter
 defaultOptions :: IO Options
 defaultOptions = constructOptions <$> getCurrentDay
-    where constructOptions day = RunWith Nothing ANSI (Timed 7 True) day Nothing []
+    where constructOptions day = RunWith Nothing Colored (Timed 7 True) day Nothing []
 
 -- | get a string representation of the currently running version
 version :: String
@@ -62,7 +62,7 @@ version = "1.0"
 -- | build a help message
 helpMessage :: IO Text
 helpMessage = pack . flip usageInfo options . formatHeader <$> getProgName
-    where formatHeader prg = prg <> " version " <> version <> "\nUSAGE: " <> prg
+    where formatHeader prg = prg <> " " <> version <> "\nUSAGE: " <> prg
             <> " [OPTION..] file(s)\nOPTIONS:"
 
 -- | build a version message
@@ -150,7 +150,7 @@ setOutput _ opts = opts
 -- | set the output format on a set of options
 setFormat :: String -> Options -> Options
 setFormat "plain" opts@RunWith{} = opts { optFormat = Plain }
-setFormat "colored" opts@RunWith{} = opts { optFormat = ANSI }
+setFormat "colored" opts@RunWith{} = opts { optFormat = Colored }
 setFormat "pango" opts@RunWith{} = opts { optFormat = Pango }
 setFormat _ opts = opts
 
