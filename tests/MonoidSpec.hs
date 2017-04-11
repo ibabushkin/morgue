@@ -36,7 +36,7 @@ instance Arbitrary BothResult where
     arbitrary = BothResult <$> arbitrary <*> arbitrary
 
 spec :: Spec
-spec = describe "Data.Morgue.Agenda Monoid instances" $ do
+spec = describe "Data.Morgue.Agenda Monoid instances" $
     describe "Data.Morgue.Agenda.Generator" $ do
         treeResultSpec
         todoResultSpec
