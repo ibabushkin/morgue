@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE RecordWildCards #-}
-module Data.Morgue.Options ( run ) where
+module Data.Morgue.Options (run) where
 
 import Control.Exception (displayException, Exception(..))
 import Control.Monad (when)

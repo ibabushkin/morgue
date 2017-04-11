@@ -1,7 +1,20 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-module Data.Morgue.Agenda.Types where
+module Data.Morgue.Agenda.Types
+    ( Tag(..)
+    , TimeMode(..)
+    , TimeStep(..)
+    , RepeatInterval(..)
+    , Timestamp(..)
+    , WeekInfo(..)
+    , AgendaElement(..)
+    , AgendaTree(..)
+    , AgendaTreeFilter(..)
+    , AgendaFile(..)
+    , liftFile
+    , AgendaMode(..)
+    ) where
 
 import Data.Aeson
 import Data.Maybe (mapMaybe)
@@ -51,7 +64,7 @@ data Timestamp = Timestamp
     , mode :: TimeMode -- ^ the mode of the timestamp
     , repeatInt :: Maybe RepeatInterval -- ^ an optional repetition specifier
     , toPrint :: Bool -- ^ whether the *time* is set explicitly
-    } deriving (Eq, Generic, Show)
+    } deriving (Eq, Show)
 
 instance Ord Timestamp where
     (<=) (Timestamp a _ _ _) (Timestamp b _ _ _) = a <= b
@@ -68,7 +81,7 @@ data WeekInfo
     = OneWeek Int -- ^ the timespan fits into the given week
     | MultipleWeeks Int Int -- ^ the timespan overlaps with these two weeks
     | NoWeeks -- ^ edge case: the timespan spans no days at all
-    deriving (Eq, Generic, Show)
+    deriving (Eq, Show)
 
 instance ToJSON WeekInfo where
     toJSON (OneWeek w) = object [ "week" .= w ]
@@ -81,7 +94,7 @@ data AgendaElement = Elem
     , toDo :: Maybe Bool -- ^ an optional todo status
     , time :: Maybe Timestamp -- ^ an optional timestamp
     , tags :: [Tag] -- ^ an optional set of tags
-    } deriving (Eq, Generic, Show)
+    } deriving (Eq, Show)
 
 instance Ord AgendaElement where
     (<=) (Elem _ _ a _) (Elem _ _ b _) = a <= b
@@ -117,6 +130,14 @@ agendaTreeToJSON n (AgendaTree e cs) = object
     , "children" .= map (agendaTreeToJSON (n + 1)) cs
     ]
 
+-- | the result type represnting an action to take when walking an `AgendaTree`
+data AgendaTreeFilter
+    = KeepTree -- ^ keep the complete current tree, with no further checks
+    | DropTree -- ^ drop the complete current tree, with no further checks
+    | KeepTreeAndWalk -- ^ keep the current node, but check subtrees
+    | DropTreeAndWalk -- ^ drop the current node, but check subtrees
+    deriving (Eq, Show)
+
 -- | a file containing a number of agenda trees
 data AgendaFile = AgendaFile
     { fName :: Text -- ^ the name of the file
@@ -136,12 +157,4 @@ data AgendaMode
     = Timed Integer Bool -- ^ a timed agenda
     | Todo -- ^ a simple tree of todo items
     | Tree -- ^ a simple tree of all items
-    deriving (Eq, Show)
-
--- | the result type represnting an action to take when walking an `AgendaTree`
-data AgendaTreeFilter
-    = KeepTree -- ^ keep the complete current tree, with no further checks
-    | DropTree -- ^ drop the complete current tree, with no further checks
-    | KeepTreeAndWalk -- ^ keep the current node, but check subtrees
-    | DropTreeAndWalk -- ^ drop the current node, but check subtrees
     deriving (Eq, Show)

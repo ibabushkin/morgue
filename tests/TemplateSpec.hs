@@ -14,7 +14,10 @@ spec = describe "Data.Morgue.Agenda.Render" $ do
     treeTemplateSpec
 
 elementTemplate :: Template
-elementTemplate = timedTemplate { templateActual = "element" }
+elementTemplate = (someTemplate Plain) { templateActual = "element" }
+
+treeTemplate :: Template
+treeTemplate = (someTemplate Plain) { templateActual = "tree" }
 
 elementTemplateSpec :: Spec
 elementTemplateSpec = describe "elementTemplate" $ do
