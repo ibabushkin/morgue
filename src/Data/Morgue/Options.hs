@@ -78,30 +78,36 @@ options =
     , Option "v" ["version"] (NoArg (const Version))
         "Show the morgue version you're using."
     , Option "m" ["mode"] (ReqArg setMode "MODE")
-        "Desired agenda mode. Possible values are: 'timed', 'todo', 'both',\n\
-        \and 'tree'. Defaults to 'both'.\n\
-        \'timed': An agenda, sorted by days.\n\
-        \'todo': A set of todo entries.\n\
-        \'both': Both of the above.\n\
-        \'tree': The complete document."
+        "Desired agenda mode. Possible values:\n\
+        \  'timed':\tAn agenda, sorted by days.\n\
+        \  'todo':\tA set of todo entries.\n\
+        \  'both':\tBoth of the above.\n\
+        \  'tree':\tThe complete document.\n\
+        \Defaults to 'both'.\n"
     , Option "n" ["num-days"] (ReqArg setNumDays "NUM")
-        "Number of days to include in the agenda, including today.\n\
-        \Only makes sense to use if you use 'timed' or 'both' mode,\n\
-        \ignored otherwise. Defaults to 7."
+        "Number of days to include in the agenda, including\n\
+        \today. Only makes sense if you use 'timed' or 'both'\n\
+        \mode, ignored otherwise.\n\
+        \Defaults to 7."
     , Option "t" ["tags"] (ReqArg setTags "TAGS")
         "Tags to filter elements on. This affects every mode."
     , Option "i" ["ignore"] (NoArg setIgnore)
-        "Invert the used tag filter, that is, make positive filters\n\
-        \negative and vice-versa. Defaults to a positive filter."
+        "Invert the used tag filter, that is, make positive\n\
+        \filters negative and vice-versa.\n\
+        \Defaults to a positive filter."
     , Option "o" ["output"] (ReqArg setOutput "FILE")
         "File to redirect output to, using stdout if not set."
     , Option "f" ["format"] (ReqArg setFormat "FORMAT")
-        "Output format to use. Possible values are 'plain', 'colored',\n\
-        \and 'pango'. Defaults to 'colored'. This overrides any custom\n\
+        "Output format to use. Possible values:\n\
+        \  'plain':\tPlaintext formatting.\n\
+        \  'colored':\tPlaintext formatting, with ANSI colors.\n\
+        \  'pango':\tPango markup formatting.\n\
+        \Defaults to 'colored'. This overrides any custom\n\
         \templates specified using -F."
-    , Option "F" ["custom-format"] (ReqArg setCustomFormat "DIRECTORY")
-        "A directory with mustache templates to be used to render the agenda.\n\
-        \This overrides any format specified using -f."
+    , Option "F" ["custom-format"] (ReqArg setCustomFormat "DIR")
+        "A directory with mustache templates to be used to\n\
+        \render the agenda. This overrides any format\n\
+        \specified using -f."
     ]
 
 -- | set the mode on a set of options
