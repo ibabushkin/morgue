@@ -1,7 +1,7 @@
 # Morgue - a markdown based orgmode replacement
-EMACS isn't for everyone - for instance, vim users often dislike the experience
-of using it. However, there a lot of features in emacs that can't be found elsewhere.
-One such feature is orgmode, whose main functionality I have recreated here.
+EMACS isn't for everyone - for instance, vim users often dislike the experience of using
+it. However, there a lot of features in emacs that can't be found elsewhere. One such
+feature is orgmode, whose main functionality I have recreated here.
 
 The following features are suppported:
 
@@ -10,8 +10,8 @@ The following features are suppported:
 * Timestamps (with repetition intervals)
 * Agenda generation
 
-Almost all of these are already present in markdown's more widely understood and
-easier syntax, or at least in syntactic extensions.
+Almost all of these are already present in markdown's more widely understood and easier
+syntax, or at least in syntactic extensions.
 
 [vim-markdown](http://www.github.com/gabrielelana/vim-markdown) provides
 a lot of the functionality I need for the editing task, namely:
@@ -20,13 +20,12 @@ a lot of the functionality I need for the editing task, namely:
 * better syntax highlighting
 * checkboxes via `Space`
 
-Yet, whereas TODO's and sectioning are replaced by the plugin linked above
-and markdown's syntax, the last two points above are much harder to replace.
+Yet, whereas TODO's and sectioning are replaced by the plugin linked above and markdown's
+syntax, the last two points above are much harder to replace.
 
-First, I tried to create a plugin that would integrate with the above linked,
-but due to the recursive nature of syntax highlighting this wasn't feasible.
-Thus, I forked it and included some functionality regarding timestamps, syntax
-highlighting included.
+First, I tried to create a plugin that would integrate with the above linked, but due to
+the recursive nature of syntax highlighting this wasn't feasible.  Thus, I forked it and
+included some functionality regarding timestamps, syntax highlighting included.
 
 **Here it is:** [vim-markdown (fork)](http://www.github.com/ibabushkin/vim-markdown)
 See it's README for more details on usage and features.
@@ -43,6 +42,13 @@ See it's README for more details on usage and features.
 
 And it's quite fast, due to the fact that it's written in Haskell.
 
+## Agenda format
+An agenda is essentially a set of trees that get generated using a specific set of rules.
+The tree is then formatted according to the format specified by the user, or using a
+directory of mustache templates that are compiled at runtime. The predefined formats are
+implemented using the same templating system, based on mustache, and can be used as an
+example for user-defined templates.
+
 ## Rules for agenda generation
 * Timestamps are in the format presented below (used by the vim plugin, too), see examples.
 ```
@@ -50,7 +56,8 @@ And it's quite fast, due to the fact that it's written in Haskell.
            \-+--/\-+--------/
   optional --'     `-- optional
 ```
-* Every list element with a checkbox and/or timestamp is included in the agenda
+* See [https://github.com/ibabushkin/morgue/blob/master/tests/test.md](test.md) for an
+  overview of the syntax.
 
 ### Examples
 * `[21.08.2015/+1w]`: From the 21st August 2015 on, every week

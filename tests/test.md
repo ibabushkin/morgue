@@ -11,9 +11,7 @@
   * T[24.08.2015/+1w] repeated task
 * [ ] scheduled note 
 
-# test
-## teeest
-### texxst
-#### sbx
-##### sbx
-* blub
+# heading
+## nested heading
+### more nest
+* a lonely note :with:a:few:tags:
