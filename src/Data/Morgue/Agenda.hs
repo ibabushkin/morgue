@@ -124,8 +124,8 @@ timestampP = do
 -- | parse a textual date/time representation and check what format it has in the process
 parseTime :: String -> Maybe (LocalTime, Bool)
 parseTime str =
-    case parseTime' "%d.%m.%Y:%H:%M" str of
-      Nothing -> (,) <$> parseTime' "%d.%m.%Y" str <*> pure False
+    case parseTime' "%F:%R" str of
+      Nothing -> (,) <$> parseTime' "%F" str <*> pure False
       res -> (,) <$> res <*> pure True
     where parseTime' = parseTimeM False defaultTimeLocale
 

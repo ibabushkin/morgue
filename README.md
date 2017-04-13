@@ -52,7 +52,7 @@ example for user-defined templates.
 ## Rules for agenda generation
 * Timestamps are in the format presented below (used by the vim plugin, too), see examples.
 ```
-[DD.MM.YYYY:HH:MM/+n{d,w,m,y}]
+[YYYY-MM-DD:HH:MM/+n{d,w,m,y}]
            \-+--/\-+--------/
   optional --'     `-- optional
 ```
@@ -60,17 +60,17 @@ example for user-defined templates.
   overview of the syntax.
 
 ### Examples
-* `[21.08.2015/+1w]`: From the 21st August 2015 on, every week
-* `[21.08.2015]`: only on that day
-* `[21.08.2015:18:00]`: same day, exact time
-* `[21.08.2015:18:00/+2m]`: every two months from that day on, at 6 pm.
+* `[2015-08-21/+1w]`: From the 21st August 2015 on, every week
+* `[2015-08-21]`: only on that day
+* `[2015-08-21:18:00]`: same day, exact time
+* `[2015-08-21:18:00/+2m]`: every two months from that day on, at 6 pm.
 * Supported repetition intervals are `d` (Day), `w` (Week), `m` (Month) and `y` (Year),
   prepended by any integer.
 
 **BUT:** The more steps the current date is away from the original date in a timestamp
-with a repetition interval set, the more computing power is required for a check,
-a small utility that changes timestamps to the most recent valid timestamp will probably
-be included in due time.
+with a repetition interval set, the more computing power is required for a check, a small
+utility that changes timestamps to the most recent valid timestamp will probably be
+included in due time.
 
 # Installation
 Just do the following, assuming you have `ghc` and `stack` installed:
