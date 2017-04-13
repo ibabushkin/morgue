@@ -1,25 +1,22 @@
 # Morgue - a markdown based orgmode replacement
+EMACS isn't for everyone - for instance, vim users often dislike the experience
+of using it. However, there a lot of features in emacs that can't be found elsewhere.
+One such feature is orgmode, whose main functionality I have recreated here.
 
-To a Vim user like me, EMACS is very complex, bloated and a generally
-unpleasant experience. Yet, one feature that is provided by EMACS made
-me use it: orgmode. It is incredibly useful and intuitive for note taking.
-
-After some time I realized that I only use a small subset of it's functionality,
-which roughly consists of the following:
+The following features are suppported:
 
 * TODO's.
 * Sectioning
 * Timestamps (with repetition intervals)
 * Agenda generation
-* Outlining (if I need it)
 
-Almost all of these are already present in markdown's much cleaner and
-easier syntax, at least in syntactic extensions.
+Almost all of these are already present in markdown's more widely understood and
+easier syntax, or at least in syntactic extensions.
 
 [vim-markdown](http://www.github.com/gabrielelana/vim-markdown) provides
-a lot of the functionality I need, namely:
+a lot of the functionality I need for the editing task, namely:
 
-* easy editing (this is Vim after all)
+* easy editing (this is vim after all)
 * better syntax highlighting
 * checkboxes via `Space`
 
@@ -32,37 +29,30 @@ Thus, I forked it and included some functionality regarding timestamps, syntax
 highlighting included.
 
 **Here it is:** [vim-markdown (fork)](http://www.github.com/ibabushkin/vim-markdown)
-See it's readme for more details on usage and features.
+See it's README for more details on usage and features.
 
 ## The features
-
 * the agenda generator supports multiple modes:
   * **Timed**: displays the agenda for a custom number of days
   * **Todo**: displays all TODO's without assigned times
   * **Both**: a combination of the above
-* and multiple output formats
-  * **ANSI**: colored output on your terminal
-  * **Pango**: Same for GTK-apps and awesomeWM-notifications to name just a few
-  * **Plaintext**: plain, non-colored text (ideal for further processing)
-
-* we've also got an outline generator:
-  * supports all the formats presented above
-  * supports multiple files as well
+* and multiple output formats:
+  * **colored**: ANSI colored output on your terminal
+  * **pango**: Same for GTK-apps and awesomeWM-notifications, dunst, to name just a few
+  * **plain**: plain, non-colored text (ideal for further processing)
 
 And it's quite fast, due to the fact that it's written in Haskell.
 
 ## Rules for agenda generation
-
-* Timestamps are in the format presented below (used by the Vim plugin, too), see examples
+* Timestamps are in the format presented below (used by the vim plugin, too), see examples.
 ```
 [DD.MM.YYYY:HH:MM/+n{d,w,m,y}]
-          \--+-/\-+--------/
-  optional --+    +-- optional
+           \-+--/\-+--------/
+  optional --'     `-- optional
 ```
 * Every list element with a checkbox and/or timestamp is included in the agenda
 
 ### Examples
-
 * `[21.08.2015/+1w]`: From the 21st August 2015 on, every week
 * `[21.08.2015]`: only on that day
 * `[21.08.2015:18:00]`: same day, exact time
@@ -73,22 +63,17 @@ And it's quite fast, due to the fact that it's written in Haskell.
 **BUT:** The more steps the current date is away from the original date in a timestamp
 with a repetition interval set, the more computing power is required for a check,
 a small utility that changes timestamps to the most recent valid timestamp will probably
-be included. 
+be included in due time.
 
 # Installation
-
 Just do the following, assuming you have `ghc` and `stack` installed:
 ```
 $ git clone morgue
 $ cd morgue
-$ git checkout stable # for the featureset described above
 $ stack install
 ``` 
 Then add `~/.stack/local/bin` to your `$PATH` if you haven't already.
-Now run `morgue -h`/`morgue-outline -h` for usage information.
+Now run `morgue -h` for usage information.
 
 # TODO
-There is currently a rewrite underway, which reduces the number of dependencies and allows
-for a more tree-like document structure visible in the agenda. If you want to experiment
-with it, see the master branch. It does not, however, currently support different output
-formats or outlining, and the new templating mechanisms are still being worked on.
+See the issue tracker for ongoing work.
