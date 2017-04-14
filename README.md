@@ -56,7 +56,7 @@ example for user-defined templates.
            \-+--/\-+--------/
   optional --'     `-- optional
 ```
-* See [https://github.com/ibabushkin/morgue/blob/master/tests/test.md](test.md) for an
+* See [test.md](https://github.com/ibabushkin/morgue/blob/master/tests/test.md) for an
   overview of the syntax.
 
 ### Examples
