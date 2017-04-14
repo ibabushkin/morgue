@@ -57,7 +57,7 @@ defaultOptions = constructOptions <$> getCurrentDay
 
 -- | get a string representation of the currently running version
 version :: String
-version = "1.0.0.1"
+version = "1.0.1.0"
 
 -- | build a help message
 helpMessage :: IO Text
