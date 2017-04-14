@@ -1,5 +1,5 @@
 name:                morgue
-version:             1.0.0.0
+version:             1.0.0.1
 synopsis:            markdown org replacement
 description:         A tool to parse markdown files in a specific format and generate agendas, todo-lists etc.
 homepage:            http://www.github.com/ibabushkin/morgue
@@ -11,13 +11,27 @@ copyright:           Copyright: (c) 2015 - 2016 Inokentiy Babushkin
 category:            Data
 build-type:          Simple
 extra-source-files:  README.md,
-                     templates/both.mustache,
-                     templates/element.mustache,
-                     templates/subtree.mustache,
-                     templates/time.mustache,
-                     templates/timed.mustache,
-                     templates/todo.mustache,
-                     templates/tree.mustache
+                     templates/colored/both.mustache,
+                     templates/colored/element.mustache,
+                     templates/colored/subtree.mustache,
+                     templates/colored/time.mustache,
+                     templates/colored/timed.mustache,
+                     templates/colored/todo.mustache,
+                     templates/colored/tree.mustache,
+                     templates/pango/both.mustache,
+                     templates/pango/element.mustache,
+                     templates/pango/subtree.mustache,
+                     templates/pango/time.mustache,
+                     templates/pango/timed.mustache,
+                     templates/pango/todo.mustache,
+                     templates/pango/tree.mustache,
+                     templates/plain/both.mustache,
+                     templates/plain/element.mustache,
+                     templates/plain/subtree.mustache,
+                     templates/plain/time.mustache,
+                     templates/plain/timed.mustache,
+                     templates/plain/todo.mustache,
+                     templates/plain/tree.mustache
 cabal-version:       >=1.10
 
 flag documentation
