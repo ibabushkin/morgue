@@ -136,7 +136,8 @@ data AgendaTreeFilter
     | DropTree -- ^ drop the complete current tree, with no further checks
     | KeepTreeAndWalk -- ^ keep the current node, but check subtrees
     | DropTreeAndWalk -- ^ drop the current node, but check subtrees
-    deriving (Eq, Show)
+    | ModifyTree (AgendaElement -> AgendaElement)
+    -- ^ keep the tree, but apply a function to the current node
 
 -- | a file containing a number of agenda trees
 data AgendaFile = AgendaFile

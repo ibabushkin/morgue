@@ -59,8 +59,8 @@ instance ToJSON TimedResult where
 -- | compute a timed agenda
 timedResult :: TimedParams -> AgendaFile -> TimedResult
 timedResult (TimedParams day n treeParams) file =
-    TimedResult . M.map (maybeToList . computeTrees treeParams) .  M.fromDistinctAscList $
-        zip days days
+    TimedResult . M.map (maybeToList . computeTrees (setTimed <$> treeParams)) .
+        M.fromDistinctAscList $ zip days days
     where days = consecutiveDays day n
           timeFilter = filterAgendaTree . agendaTreeFilterTimed False
           computeTrees (Just tP) d = liftFile (treeAgenda tP >=> timeFilter d) file
@@ -118,10 +118,16 @@ instance ToJSON BothResult
 -- | compute a both agenda
 bothResult :: BothParams -> AgendaFile -> BothResult
 bothResult (BothParams day n sD tP) =
-    BothResult <$> timedResult (TimedParams day n tP) <*> todoResult (TodoParams sD tP)
+    BothResult
+        <$> timedResult (TimedParams day n (setTimed <$> tP))
+        <*> todoResult (TodoParams sD tP)
 
 -- | the parameters passed to a tree agenda
 data TreeParams = TreeParams [Tag] Bool Bool
+
+-- | force timestamp display
+setTimed :: TreeParams -> TreeParams
+setTimed (TreeParams ts inv _) = TreeParams ts inv True
 
 -- | the result of a tree agenda
 newtype TreeResult = TreeResult [AgendaFile]
@@ -136,7 +142,8 @@ treeResult tP = TreeResult . maybeToList . liftFile (treeAgenda tP)
 
 -- | filter an AgendaTree by tags
 treeAgenda :: TreeParams -> AgendaTree -> Maybe AgendaTree
-treeAgenda (TreeParams ts invert timeDisplay) = filterAgendaTree (getFilter invert ts)
+treeAgenda (TreeParams ts invert tD) =
+    filterAgendaTree (getFilter invert ts) >=> filterAgendaTree (timeDisplayFilter tD)
     where getFilter True = agendaTreeFilterNotTagged
           getFilter False = agendaTreeFilterTagged
 
@@ -152,6 +159,12 @@ agendaTreeFilterNotTagged forbidden (Elem _ _ _ ts)
     | not . null $ forbidden `intersect` ts = DropTree
     | otherwise = KeepTreeAndWalk
 
+-- | a filter for subtrees that possibly cleans away timestamps
+timeDisplayFilter :: Bool -> AgendaElement -> AgendaTreeFilter
+timeDisplayFilter True _ = KeepTree
+timeDisplayFilter False _ = ModifyTree modify
+    where modify e = e { time = Nothing }
+
 -- | filter an agenda tree by dropping nodes not matched by the passed function
 filterAgendaTree :: (AgendaElement -> AgendaTreeFilter) -> AgendaTree -> Maybe AgendaTree
 filterAgendaTree func tree@(AgendaTree e subTrees) =
@@ -159,8 +172,10 @@ filterAgendaTree func tree@(AgendaTree e subTrees) =
       KeepTree -> Just tree
       DropTree -> Nothing
       KeepTreeAndWalk ->
-          Just $ AgendaTree e (mapMaybe (filterAgendaTree func) subTrees)
+          Just . AgendaTree e $ mapMaybe (filterAgendaTree func) subTrees
       DropTreeAndWalk ->
           case mapMaybe (filterAgendaTree func) subTrees of
             [] -> Nothing
             children -> Just (AgendaTree e children)
+      ModifyTree f ->
+          Just . AgendaTree (f e) $ mapMaybe (filterAgendaTree func) subTrees
