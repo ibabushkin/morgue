@@ -121,7 +121,7 @@ bothResult (BothParams day n sD tP) =
     BothResult <$> timedResult (TimedParams day n tP) <*> todoResult (TodoParams sD tP)
 
 -- | the parameters passed to a tree agenda
-data TreeParams = TreeParams [Tag] Bool
+data TreeParams = TreeParams [Tag] Bool Bool
 
 -- | the result of a tree agenda
 newtype TreeResult = TreeResult [AgendaFile]
@@ -136,7 +136,7 @@ treeResult tP = TreeResult . maybeToList . liftFile (treeAgenda tP)
 
 -- | filter an AgendaTree by tags
 treeAgenda :: TreeParams -> AgendaTree -> Maybe AgendaTree
-treeAgenda (TreeParams ts invert) = filterAgendaTree (getFilter invert ts)
+treeAgenda (TreeParams ts invert timeDisplay) = filterAgendaTree (getFilter invert ts)
     where getFilter True = agendaTreeFilterNotTagged
           getFilter False = agendaTreeFilterTagged
 

@@ -37,6 +37,7 @@ data Options
         , optMode :: AgendaMode -- ^ the agenda mode to use
         , optDay :: Day -- ^ the starting day of the agenda
         , optTags :: Maybe ([Tag], Bool) -- ^ tags passed to filter the agenda tree
+        , optTimeDisplay  :: Bool -- ^ the time settings outside of a timed agenda
         , optFiles :: [FilePath] -- ^ the files to use as input
         }
     | Help
@@ -53,11 +54,11 @@ data Options
 -- * no tag filter
 defaultOptions :: IO Options
 defaultOptions = constructOptions <$> getCurrentDay
-    where constructOptions day = RunWith Nothing Colored (Timed 7 True) day Nothing []
+    where constructOptions day = RunWith Nothing Colored (Timed 7 True) day Nothing False []
 
 -- | get a string representation of the currently running version
 version :: String
-version = "1.0.1.0"
+version = "1.1.0.0"
 
 -- | build a help message
 helpMessage :: IO Text
@@ -95,6 +96,10 @@ options =
         "Invert the used tag filter, that is, make positive\n\
         \filters negative and vice-versa.\n\
         \Defaults to a positive filter."
+    , Option "d" ["display-time"] (NoArg setTimeDisplay)
+        "Toggle whether timestamps should be rendered outside\n\
+        \of a 'timed' agenda or the 'timed' part of a 'both'\n\
+        \agenda. Defaults to false."
     , Option "o" ["output"] (ReqArg setOutput "FILE")
         "File to redirect output to, using stdout if not set."
     , Option "f" ["format"] (ReqArg setFormat "FORMAT")
@@ -141,6 +146,10 @@ setIgnore opts@RunWith{..} = opts { optTags = Just (tags, bool) }
     where tags = fromMaybe [] (fst <$> optTags)
           bool = maybe True not (snd <$> optTags)
 setIgnore opts = opts
+
+setTimeDisplay :: Options -> Options
+setTimeDisplay opts@RunWith{..} = opts { optTimeDisplay = not optTimeDisplay }
+setTimeDisplay opts = opts
 
 -- | set the output file on a set of options
 setOutput :: FilePath -> Options -> Options
@@ -204,13 +213,12 @@ runWith RunWith{..} template files
     | Timed num True <- optMode = toText $ map (bothRes num) files
     | Timed num False <- optMode = toText $ map (timedRes num) files
     | Todo <- optMode = toText $ map todoRes files
-    | Tree <- optMode, Just (tags, inv) <- optTags =
-        toText $ map (treeResult (TreeParams tags inv)) files
+    | Tree <- optMode, Just tP <- treeParams = toText $ map (treeResult tP) files
     | otherwise = render template $ TreeResult files
-    where getTreeParams = uncurry TreeParams
-          bothRes num = bothResult (BothParams optDay num True (getTreeParams <$> optTags))
-          timedRes num = timedResult (TimedParams optDay num (getTreeParams <$> optTags))
-          todoRes = todoResult (TodoParams True (getTreeParams <$> optTags))
+    where treeParams = uncurry TreeParams <$> optTags <*> pure optTimeDisplay
+          bothRes num = bothResult (BothParams optDay num True treeParams)
+          timedRes num = timedResult (TimedParams optDay num treeParams)
+          todoRes = todoResult (TodoParams True treeParams)
           toText :: (ToJSON a, Monoid a) => [a] -> Text
           toText = render template . mconcat
 runWith _ _ _ = mempty
