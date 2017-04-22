@@ -37,7 +37,7 @@ data Options
         , optMode :: AgendaMode -- ^ the agenda mode to use
         , optDay :: Day -- ^ the starting day of the agenda
         , optTags :: Maybe ([Tag], Bool) -- ^ tags passed to filter the agenda tree
-        , optTimeDisplay  :: Bool -- ^ the time settings outside of a timed agenda
+        , optTimeDisplayFull :: Bool -- ^ the time display settings to use
         , optFiles :: [FilePath] -- ^ the files to use as input
         }
     | Help
@@ -148,7 +148,7 @@ setIgnore opts@RunWith{..} = opts { optTags = Just (tags, bool) }
 setIgnore opts = opts
 
 setTimeDisplay :: Options -> Options
-setTimeDisplay opts@RunWith{..} = opts { optTimeDisplay = not optTimeDisplay }
+setTimeDisplay opts@RunWith{..} = opts { optTimeDisplayFull = not optTimeDisplayFull }
 setTimeDisplay opts = opts
 
 -- | set the output file on a set of options
@@ -213,9 +213,9 @@ runWith RunWith{..} template files
     | Timed num True <- optMode = toText $ map (bothRes num) files
     | Timed num False <- optMode = toText $ map (timedRes num) files
     | Todo <- optMode = toText $ map todoRes files
-    | Tree <- optMode, Just tP <- treeParams = toText $ map (treeResult tP) files
-    | otherwise = render template $ TreeResult files
-    where treeParams = uncurry TreeParams <$> optTags <*> pure optTimeDisplay
+    | Tree <- optMode = toText $ map (treeResult treeParams) files
+    -- | otherwise = render template $ TreeResult files
+    where treeParams = uncurry TreeParams (fromMaybe ([], False) optTags) optTimeDisplayFull
           bothRes num = bothResult (BothParams optDay num True treeParams)
           timedRes num = timedResult (TimedParams optDay num treeParams)
           todoRes = todoResult (TodoParams True treeParams)

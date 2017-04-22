@@ -6,6 +6,7 @@ module Data.Morgue.Agenda.Types
     , TimeMode(..)
     , TimeStep(..)
     , RepeatInterval(..)
+    , TimestampDisplay(..)
     , Timestamp(..)
     , WeekInfo(..)
     , AgendaElement(..)
@@ -58,12 +59,24 @@ data RepeatInterval = Interval
 
 instance ToJSON RepeatInterval
 
+data TimestampDisplay
+    = FullWithTime -- ^ show date and time
+    | FullWithoutTime -- ^ show date, as time is not set explicitly
+    | Opportunistic -- ^ assume date is shown somewhere else, show time only
+    | Off -- ^ don't show anything, for whatever reason
+    deriving (Eq, Show)
+
+-- | convert a timestamp display attribute to a boolean value
+toBool :: TimestampDisplay -> Bool
+toBool Off = False
+toBool _ = True
+
 -- | a timestamp as defined in a markdown file
 data Timestamp = Timestamp
     { timeValue :: LocalTime -- ^ the actual time of the timestamp
     , mode :: TimeMode -- ^ the mode of the timestamp
     , repeatInt :: Maybe RepeatInterval -- ^ an optional repetition specifier
-    , toPrint :: Bool -- ^ whether the *time* is set explicitly
+    , toPrint :: TimestampDisplay -- ^ whether the *time* is set explicitly
     } deriving (Eq, Show)
 
 instance Ord Timestamp where
@@ -71,9 +84,15 @@ instance Ord Timestamp where
 
 instance ToJSON Timestamp where
     toJSON Timestamp{..} = object
-        [ "timeValue" .= formatTime defaultTimeLocale "%R" timeValue
+        [ "timeValue" .= formatTime defaultTimeLocale
+            (case toPrint of
+               FullWithTime -> "%A, %F, %R"
+               FullWithoutTime -> "%A, %F"
+               Opportunistic -> "%R"
+               Off -> "")
+            timeValue
         , "mode" .= mode
-        , "toPrint" .= toPrint
+        , "toPrint" .= toBool toPrint
         ]
 
 -- | a data block describing the timespan covered by a timed agenda, in week numbers

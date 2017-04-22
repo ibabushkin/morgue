@@ -122,11 +122,11 @@ timestampP = do
       Nothing -> mzero
 
 -- | parse a textual date/time representation and check what format it has in the process
-parseTime :: String -> Maybe (LocalTime, Bool)
+parseTime :: String -> Maybe (LocalTime, TimestampDisplay)
 parseTime str =
     case parseTime' "%F:%R" str of
-      Nothing -> (,) <$> parseTime' "%F" str <*> pure False
-      res -> (,) <$> res <*> pure True
+      Nothing -> (,) <$> parseTime' "%F" str <*> pure FullWithoutTime
+      res -> (,) <$> res <*> pure FullWithTime
     where parseTime' = parseTimeM False defaultTimeLocale
 
 -- | parse a repetition interval from a timestamp

@@ -29,7 +29,7 @@ import Data.Semigroup
 import GHC.Generics
 
 -- | the parameters passed to a timed agenda
-data TimedParams = TimedParams Day Integer (Maybe TreeParams)
+data TimedParams = TimedParams Day Integer TreeParams
 
 -- | the result of a timed agenda
 newtype TimedResult = TimedResult (M.Map Day [AgendaFile])
@@ -59,12 +59,12 @@ instance ToJSON TimedResult where
 -- | compute a timed agenda
 timedResult :: TimedParams -> AgendaFile -> TimedResult
 timedResult (TimedParams day n treeParams) file =
-    TimedResult . M.map (maybeToList . computeTrees (setTimed <$> treeParams)) .
-        M.fromDistinctAscList $ zip days days
+    TimedResult . M.map (maybeToList . computeTrees treeParams) . M.fromDistinctAscList $
+        zip days days
     where days = consecutiveDays day n
           timeFilter = filterAgendaTree . agendaTreeFilterTimed False
-          computeTrees (Just tP) d = liftFile (treeAgenda tP >=> timeFilter d) file
-          computeTrees Nothing d = liftFile (timeFilter d) file
+          computeTrees tP d = liftFile (treeAgenda True tP >=> timeFilter d) file
+          --computeTrees Nothing d = liftFile (timeFilter d) file
 
 -- | a filter to be used to filter for subtrees denoting elements relevant on a given day
 agendaTreeFilterTimed :: Bool -> Day -> AgendaElement -> AgendaTreeFilter
@@ -73,7 +73,7 @@ agendaTreeFilterTimed showOverdue day element
     | otherwise = DropTreeAndWalk
 
 -- | the parameters passed to a todo agenda
-data TodoParams = TodoParams Bool (Maybe TreeParams)
+data TodoParams = TodoParams Bool TreeParams
 
 -- | the result of a todo agenda
 newtype TodoResult = TodoResult [AgendaFile]
@@ -84,10 +84,10 @@ instance ToJSON TodoResult where
 
 -- | compute a todo agenda
 todoResult :: TodoParams -> AgendaFile -> TodoResult
-todoResult (TodoParams showDone (Just tP)) file = TodoResult . maybeToList $
-    liftFile (filterAgendaTree (agendaTreeFilterTodo showDone) >=> treeAgenda tP) file
-todoResult (TodoParams showDone Nothing) tree = TodoResult . maybeToList $
-    liftFile (filterAgendaTree (agendaTreeFilterTodo showDone)) tree
+todoResult (TodoParams showDone tP) file = TodoResult . maybeToList $
+    liftFile (filterAgendaTree (agendaTreeFilterTodo showDone) >=> treeAgenda False tP) file
+{-todoResult (TodoParams showDone Nothing) tree = TodoResult . maybeToList $
+    liftFile (filterAgendaTree (agendaTreeFilterTodo showDone)) tree-}
 
 -- | a filter for subtrees denoting todo elements
 agendaTreeFilterTodo :: Bool -> AgendaElement -> AgendaTreeFilter
@@ -97,7 +97,7 @@ agendaTreeFilterTodo showDone (Elem _ (Just tD) _ _)
     | otherwise = DropTreeAndWalk
 
 -- | the parameters passed to a both agenda
-data BothParams = BothParams Day Integer Bool (Maybe TreeParams)
+data BothParams = BothParams Day Integer Bool TreeParams
 
 -- | the result of a both agenda
 data BothResult = BothResult
@@ -119,15 +119,11 @@ instance ToJSON BothResult
 bothResult :: BothParams -> AgendaFile -> BothResult
 bothResult (BothParams day n sD tP) =
     BothResult
-        <$> timedResult (TimedParams day n (setTimed <$> tP))
+        <$> timedResult (TimedParams day n tP)
         <*> todoResult (TodoParams sD tP)
 
 -- | the parameters passed to a tree agenda
 data TreeParams = TreeParams [Tag] Bool Bool
-
--- | force timestamp display
-setTimed :: TreeParams -> TreeParams
-setTimed (TreeParams ts inv _) = TreeParams ts inv True
 
 -- | the result of a tree agenda
 newtype TreeResult = TreeResult [AgendaFile]
@@ -138,12 +134,14 @@ instance ToJSON TreeResult where
 
 -- | compute a tree agenda
 treeResult :: TreeParams -> AgendaFile -> TreeResult
-treeResult tP = TreeResult . maybeToList . liftFile (treeAgenda tP)
+treeResult tP = TreeResult . maybeToList . liftFile (treeAgenda False tP)
 
 -- | filter an AgendaTree by tags
-treeAgenda :: TreeParams -> AgendaTree -> Maybe AgendaTree
-treeAgenda (TreeParams ts invert tD) =
-    filterAgendaTree (getFilter invert ts) >=> filterAgendaTree (timeDisplayFilter tD)
+treeAgenda :: Bool -> TreeParams -> AgendaTree -> Maybe AgendaTree
+treeAgenda isTimed (TreeParams ts invert tD)
+    | not isTimed && tD = filterAgendaTree (getFilter invert ts)
+    | otherwise =
+        filterAgendaTree (getFilter invert ts) >=> filterAgendaTree (timeDisplayFilter isTimed)
     where getFilter True = agendaTreeFilterNotTagged
           getFilter False = agendaTreeFilterTagged
 
@@ -161,9 +159,15 @@ agendaTreeFilterNotTagged forbidden (Elem _ _ _ ts)
 
 -- | a filter for subtrees that possibly cleans away timestamps
 timeDisplayFilter :: Bool -> AgendaElement -> AgendaTreeFilter
-timeDisplayFilter True _ = KeepTree
+timeDisplayFilter True _ = ModifyTree modify
+    where modify e = e { time = modifyTimestamp <$> time e }
+          modifyTimestamp t = t { toPrint = clean (toPrint t) }
+          clean FullWithTime = Opportunistic
+          clean FullWithoutTime = Off
+          clean m = m
 timeDisplayFilter False _ = ModifyTree modify
-    where modify e = e { time = Nothing }
+    where modify e = e { time = modifyTimestamp <$> time e }
+          modifyTimestamp t = t { toPrint = Off }
 
 -- | filter an agenda tree by dropping nodes not matched by the passed function
 filterAgendaTree :: (AgendaElement -> AgendaTreeFilter) -> AgendaTree -> Maybe AgendaTree
