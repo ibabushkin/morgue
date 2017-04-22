@@ -1,4 +1,4 @@
 {{#element}}
-{{#toDo}}<b><span color="red">{{toDo}}</span>:</b>	{{/toDo}}{{#time}}{{#toPrint}}<b><span color="red">{{{mode}}}</span>: {{{timeValue}}}</b>	{{/toPrint}}{{/time}}{{#description}}{{.}}
+{{#toDo}}<b><span color="red">{{toDo}}</span>:</b>	{{/toDo}}{{#time}}{{#toPrintMode}}<b><span color="red">{{{mode}}}</span>:</b> {{/toPrintMode}}{{#toPrint}}<b>{{{timeValue}}}</b>	{{/toPrint}}{{/time}}{{#description}}{{.}}
 {{/description}}
 {{/element}}

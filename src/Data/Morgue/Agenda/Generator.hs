@@ -163,7 +163,7 @@ timeDisplayFilter True _ = ModifyTree modify
     where modify e = e { time = modifyTimestamp <$> time e }
           modifyTimestamp t = t { toPrint = clean (toPrint t) }
           clean FullWithTime = Opportunistic
-          clean FullWithoutTime = Off
+          clean FullWithoutTime = OpportunisticOff
           clean m = m
 timeDisplayFilter False _ = ModifyTree modify
     where modify e = e { time = modifyTimestamp <$> time e }

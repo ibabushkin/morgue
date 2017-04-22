@@ -63,13 +63,9 @@ data TimestampDisplay
     = FullWithTime -- ^ show date and time
     | FullWithoutTime -- ^ show date, as time is not set explicitly
     | Opportunistic -- ^ assume date is shown somewhere else, show time only
-    | Off -- ^ don't show anything, for whatever reason
+    | OpportunisticOff -- ^ don't show time or date, but show time mode
+    | Off -- ^ don't show anything
     deriving (Eq, Show)
-
--- | convert a timestamp display attribute to a boolean value
-toBool :: TimestampDisplay -> Bool
-toBool Off = False
-toBool _ = True
 
 -- | a timestamp as defined in a markdown file
 data Timestamp = Timestamp
@@ -89,11 +85,17 @@ instance ToJSON Timestamp where
                FullWithTime -> "%A, %F, %R"
                FullWithoutTime -> "%A, %F"
                Opportunistic -> "%R"
-               Off -> "")
+               _ -> "")
             timeValue
         , "mode" .= mode
-        , "toPrint" .= toBool toPrint
+        , "toPrint" .= getToPrint toPrint
+        , "toPrintMode" .= getToPrintMode toPrint
         ]
+        where getToPrint Off = False
+              getToPrint OpportunisticOff = False
+              getToPrint _ = True
+              getToPrintMode OpportunisticOff = True
+              getToPrintMode tP = getToPrint tP
 
 -- | a data block describing the timespan covered by a timed agenda, in week numbers
 data WeekInfo
