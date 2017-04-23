@@ -58,7 +58,7 @@ defaultOptions = constructOptions <$> getCurrentDay
 
 -- | get a string representation of the currently running version
 version :: String
-version = "1.1.0.1"
+version = "1.2.0.0"
 
 -- | build a help message
 helpMessage :: IO Text
@@ -215,7 +215,7 @@ runWith RunWith{..} template files
     | Todo <- optMode = toText $ map todoRes files
     | Tree <- optMode = toText $ map (treeResult treeParams) files
     -- | otherwise = render template $ TreeResult files
-    where treeParams = uncurry TreeParams (fromMaybe ([], False) optTags) optTimeDisplayFull
+    where treeParams = uncurry TreeParams (fromMaybe ([], True) optTags) optTimeDisplayFull
           bothRes num = bothResult (BothParams optDay num True treeParams)
           timedRes num = timedResult (TimedParams optDay num treeParams)
           todoRes = todoResult (TodoParams True treeParams)

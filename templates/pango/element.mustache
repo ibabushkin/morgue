@@ -1,4 +1,5 @@
 {{#element}}
-{{#toDo}}<b><span color="red">{{toDo}}</span>:</b>	{{/toDo}}{{#time}}{{#toPrintMode}}<b><span color="red">{{{mode}}}</span>:</b> {{/toPrintMode}}{{#toPrint}}<b>{{{timeValue}}}</b>	{{/toPrint}}{{/time}}{{#description}}{{.}}
+{{{indent}}}{{#toDo}}<b><span color="red">{{toDo}}</span>:</b>	{{/toDo}}{{#time}}{{#toPrintMode}}<b><span color="red">{{{mode}}}</span>:</b> {{/toPrintMode}}{{#toPrint}}<b>{{{timeValue}}}</b>	{{/toPrint}}{{/time}}{{{headline}}}
+{{#description}}{{{indent}}}  {{.}}
 {{/description}}
 {{/element}}

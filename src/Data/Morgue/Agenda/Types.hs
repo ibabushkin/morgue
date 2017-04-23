@@ -18,7 +18,8 @@ module Data.Morgue.Agenda.Types
     ) where
 
 import Data.Aeson
-import Data.Maybe (mapMaybe)
+import Data.List (uncons)
+import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time.LocalTime (LocalTime)
@@ -122,11 +123,13 @@ instance Ord AgendaElement where
 
 instance ToJSON AgendaElement where
     toJSON Elem{..} = object
-        [ "description" .= description
+        [ "headline" .= headline
+        , "description" .= desc
         , "toDo" .= toDoToJSON toDo
         , "time" .= time
         , "tags" .= tags
         ]
+        where (headline, desc) = fromMaybe mempty $ uncons description
 
 -- | render todo markers to a nice view known from orgmode
 toDoToJSON :: Maybe Bool -> Value

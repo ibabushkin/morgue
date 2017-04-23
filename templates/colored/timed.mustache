@@ -1,5 +1,5 @@
 Week agenda ({{#week}}W{{{week}}}{{#week2}}-W{{{week2}}}{{/week2}}{{/week}}):
 {{#days}}
 {{{day}}}:
-{{>tree}}{{^trees}}
+{{#trees}}{{#trees}}{{>subtree}}{{/trees}}{{/trees}}{{^trees}}
 {{/trees}}{{/days}}
