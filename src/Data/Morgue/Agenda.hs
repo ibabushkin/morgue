@@ -94,7 +94,7 @@ elementP = do
     td <- optional (checkboxP <* space)
     ts <- optional (try timestampP <* space)
     de <- pack <$> manyTill anyChar endP
-    tg <- fromMaybe [] <$> optional tagsP
+    tg <- try tagsP <|> pure []
     return $ Elem (map T.strip $ T.lines de) td ts tg
 
 -- | parse a checkbox from an agenda entry description
@@ -141,7 +141,7 @@ repeatP = string "/+" *> (Interval <$> integer <*> timestepP)
 
 -- | parse a set of tags from an agenda entry description
 tagsP :: Parser [Tag]
-tagsP = colon *> sepEndBy1 (Tag . pack <$> some alphaNumChar) colon
+tagsP = string " :" *> sepEndBy (Tag . pack <$> some alphaNumChar) colon <* colon
     where colon = char ':'
 
 -- | parse the end of a regular entry text
