@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 module ICalParser where
 
 import Data.List (groupBy, intercalate, sortOn)
@@ -45,7 +44,7 @@ parseEvent = begin "VEVENT" *> uselessLine *>
                          hour <- count 2 digit
                          minute <- count 2 digit
                          count 2 digit
-                         return $ "T[" ++ day ++ "." ++ month ++ "." ++ year ++
+                         return $ "T[" ++ year ++ "-" ++ month ++ "-" ++ day ++
                              ":" ++ hour ++ ":" ++ minute ++ "]"
 
 -- parse the whole document
@@ -73,4 +72,4 @@ newline :: Parser String
 newline = string "\n" <|> string "\r\n" <|> string "\r"
 
 main :: IO ()
-main = convertFile "/home/thewormkill/org/notes.ics" >>= putStrLn
+main = convertFile "/home/twk/org/notes.ics" >>= putStrLn
