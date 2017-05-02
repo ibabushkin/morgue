@@ -38,6 +38,7 @@ data Options
         , optDay :: Day -- ^ the starting day of the agenda
         , optTags :: Maybe ([Tag], Bool) -- ^ tags passed to filter the agenda tree
         , optTimeDisplayFull :: Bool -- ^ the time display settings to use
+        , optOverdue :: Bool -- ^ showing overdue elements
         , optFiles :: [FilePath] -- ^ the files to use as input
         }
     | Help
@@ -54,7 +55,8 @@ data Options
 -- * no tag filter
 defaultOptions :: IO Options
 defaultOptions = constructOptions <$> getCurrentDay
-    where constructOptions day = RunWith Nothing Colored (Timed 7 True) day Nothing False []
+    where constructOptions day =
+              RunWith Nothing Colored (Timed 7 True) day Nothing False True []
 
 -- | get a string representation of the currently running version
 version :: String
@@ -113,6 +115,9 @@ options =
         "A directory with mustache templates to be used to\n\
         \render the agenda. This overrides any format\n\
         \specified using -f."
+    , Option "O" ["overdue"] (NoArg setOverdue)
+        "Invert the display of overdue elements in timed agendas.\n\
+        \Defaults to true."
     ]
 
 -- | set the mode on a set of options
@@ -167,6 +172,11 @@ setFormat _ opts = opts
 setCustomFormat :: FilePath -> Options -> Options
 setCustomFormat path opts@RunWith{} = opts { optFormat = Custom path }
 setCustomFormat _ opts = opts
+
+-- | set the overdue settings on a set of options
+setOverdue :: Options -> Options
+setOverdue opts@RunWith{..} = opts { optOverdue = not optOverdue }
+setOverdue opts = opts
 
 -- | get the file contents to work with, including a list of I/O errors
 -- that occured and the data, if any of the sources returned some
