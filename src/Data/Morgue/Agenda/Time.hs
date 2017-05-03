@@ -47,20 +47,19 @@ getDay :: Timestamp -> Day
 getDay (Timestamp (LocalTime day _) _ _ _) = day
 
 -- | decide whether a timed element is overdue at a certain day
-isOverdue :: Day -> AgendaElement -> Bool 
-isOverdue day (Elem _ (Just True) (Just ts) _) = getDay ts < day
+isOverdue :: Day -> AgendaElement -> Bool
+isOverdue day (Elem _ _ (Just ts) _) =
+    getDay ts < day && isNothing (repeatInt ts) && mode ts /= Time
 isOverdue _ _ = False
 
 -- | decide whether an element is to be included for a certain day
-isRelevant :: Bool -> Day -> AgendaElement -> Bool
-isRelevant False day (Elem _ _ (Just ts) _) = repeatValid ts
+isRelevant :: Day -> AgendaElement -> Bool
+isRelevant day (Elem _ _ (Just ts) _) = repeatValid ts
     where repeatValid current
               | getDay current < day = maybe False repeatValid (getNext current)
               | getDay current > day = False
               | otherwise = True
-isRelevant True day (Elem _ _ (Just ts) _) =
-    getDay ts < day && isNothing (repeatInt ts) && (mode ts) /= Time
-isRelevant _ _ _ = False
+isRelevant _ _ = False
 
 -- | format a day
 formatDay :: Day -> Text
