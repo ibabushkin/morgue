@@ -58,7 +58,8 @@ isRelevant False day (Elem _ _ (Just ts) _) = repeatValid ts
               | getDay current < day = maybe False repeatValid (getNext current)
               | getDay current > day = False
               | otherwise = True
-isRelevant True day (Elem _ _ (Just ts) _) = getDay ts < day && isNothing (repeatInt ts)
+isRelevant True day (Elem _ _ (Just ts) _) =
+    getDay ts < day && isNothing (repeatInt ts) && (mode ts) /= Time
 isRelevant _ _ _ = False
 
 -- | format a day
