@@ -29,22 +29,24 @@ import Data.Semigroup
 import GHC.Generics
 
 -- | the parameters passed to a timed agenda
-data TimedParams = TimedParams Day Integer TreeParams
+data TimedParams = TimedParams Bool Day Integer TreeParams
 
 -- | the result of a timed agenda
-newtype TimedResult = TimedResult (M.Map Day [AgendaFile])
+data TimedResult = TimedResult [AgendaFile] (M.Map Day [AgendaFile])
     deriving (Eq, Show)
 
 instance Semigroup TimedResult where
-    (TimedResult m1) <> (TimedResult m2) = TimedResult $ M.unionWith (<>) m1 m2
+    (TimedResult o1 m1) <> (TimedResult o2 m2) =
+        TimedResult (o1 <> o2) $ M.unionWith (<>) m1 m2
 
 instance Monoid TimedResult where
     mappend = (<>)
-    mempty = TimedResult mempty
+    mempty = TimedResult mempty mempty
 
 instance ToJSON TimedResult where
-    toJSON (TimedResult days) = object
-        [ "days" .= M.foldrWithKey go [] days
+    toJSON (TimedResult overdue days) = object
+        [ "overdue" .= overdue
+        , "days" .= M.foldrWithKey go [] days
         , "week" .= toWeekInfo ((,) <$> safeGet M.findMin <*> safeGet M.findMax)
         ]
         where go day tree res = pairToJSON day tree : res
@@ -58,12 +60,16 @@ instance ToJSON TimedResult where
 
 -- | compute a timed agenda
 timedResult :: TimedParams -> AgendaFile -> TimedResult
-timedResult (TimedParams day n treeParams) file =
-    TimedResult . M.map (maybeToList . computeTrees treeParams) . M.fromDistinctAscList $
-        zip days days
+timedResult (TimedParams showOverdue day n treeParams) file =
+    TimedResult (overdue showOverdue) . transformMap . M.fromDistinctAscList $ zip days days
     where days = consecutiveDays day n
           timeFilter = filterAgendaTree . agendaTreeFilterTimed False
-          computeTrees tP d = liftFile (treeAgenda True tP >=> timeFilter d) file
+          overdueFilter = filterAgendaTree $ agendaTreeFilterTimed True day
+          computeTrees d = liftFile (treeAgenda True treeParams >=> timeFilter d) file
+          overdue True = maybeToList $
+              liftFile (treeAgenda True treeParams >=> overdueFilter) file
+          overdue False = []
+          transformMap = M.map (maybeToList . computeTrees)
           --computeTrees Nothing d = liftFile (timeFilter d) file
 
 -- | a filter to be used to filter for subtrees denoting elements relevant on a given day
@@ -97,7 +103,7 @@ agendaTreeFilterTodo showDone (Elem _ (Just tD) _ _)
     | otherwise = DropTreeAndWalk
 
 -- | the parameters passed to a both agenda
-data BothParams = BothParams Day Integer Bool TreeParams
+data BothParams = BothParams Bool Day Integer Bool TreeParams
 
 -- | the result of a both agenda
 data BothResult = BothResult
@@ -117,9 +123,9 @@ instance ToJSON BothResult
 
 -- | compute a both agenda
 bothResult :: BothParams -> AgendaFile -> BothResult
-bothResult (BothParams day n sD tP) =
+bothResult (BothParams sO day n sD tP) =
     BothResult
-        <$> timedResult (TimedParams day n tP)
+        <$> timedResult (TimedParams sO day n tP)
         <*> todoResult (TodoParams sD tP)
 
 -- | the parameters passed to a tree agenda

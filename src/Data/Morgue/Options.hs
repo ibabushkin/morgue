@@ -226,8 +226,8 @@ runWith RunWith{..} template files
     | Tree <- optMode = toText $ map (treeResult treeParams) files
     -- | otherwise = render template $ TreeResult files
     where treeParams = uncurry TreeParams (fromMaybe ([], True) optTags) optTimeDisplayFull
-          bothRes num = bothResult (BothParams optDay num True treeParams)
-          timedRes num = timedResult (TimedParams optDay num treeParams)
+          bothRes num = bothResult (BothParams optOverdue optDay num True treeParams)
+          timedRes num = timedResult (TimedParams optOverdue optDay num treeParams)
           todoRes = todoResult (TodoParams True treeParams)
           toText :: (ToJSON a, Monoid a) => [a] -> Text
           toText = render template . mconcat
