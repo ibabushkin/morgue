@@ -13,6 +13,7 @@ module Data.Morgue.Agenda.Time
     , module OrdinalDate
     ) where
 
+import Data.Maybe (isNothing)
 import Data.Morgue.Agenda.Types
 import Data.Text (Text, pack)
 import Data.Time.Calendar as Calendar
@@ -51,13 +52,14 @@ isOverdue day (Elem _ (Just True) (Just ts) _) = getDay ts < day
 isOverdue _ _ = False
 
 -- | decide whether an element is to be included for a certain day
-isRelevant :: Day -> AgendaElement -> Bool
-isRelevant day (Elem _ _ (Just ts) _) = repeatValid ts
+isRelevant :: Bool -> Day -> AgendaElement -> Bool
+isRelevant False day (Elem _ _ (Just ts) _) = repeatValid ts
     where repeatValid current
               | getDay current < day = maybe False repeatValid (getNext current)
               | getDay current > day = False
               | otherwise = True
-isRelevant _ _ = False
+isRelevant True day (Elem _ _ (Just ts) _) = getDay ts < day && isNothing (repeatInt ts)
+isRelevant _ _ _ = False
 
 -- | format a day
 formatDay :: Day -> Text

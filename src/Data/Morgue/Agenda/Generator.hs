@@ -77,7 +77,7 @@ timedResult (TimedParams showOverdue day n treeParams) file =
 -- | a filter to be used to filter for subtrees denoting elements relevant on a given day
 agendaTreeFilterTimed :: Bool -> Day -> AgendaElement -> AgendaTreeFilter
 agendaTreeFilterTimed showOverdue day element
-    | isRelevant day element || showOverdue = KeepTree
+    | isRelevant showOverdue day element = KeepTree
     | otherwise = DropTreeAndWalk
 
 -- | the parameters passed to a todo agenda
