@@ -1,5 +1,5 @@
 Week agenda ({{#week}}W{{{week}}}{{#week2}}-W{{{week2}}}{{/week2}}{{/week}}):
-{{#days}}
-{{{day}}}:
+{{#overdue}}Overdue:
+{{#trees}}{{#trees}}{{>subtree}}{{/trees}}{{/trees}}{{/overdue}}{{#days}}{{{day}}}:
 {{#trees}}{{#trees}}{{>subtree}}{{/trees}}{{/trees}}{{^trees}}
 {{/trees}}{{/days}}

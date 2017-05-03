@@ -1,5 +1,5 @@
 <span color="lightblue">Week agenda ({{#week}}W{{week}}{{#week2}}-W{{week2}}}{{/week2}}{{/week}}):</span>
-{{#days}}
-<span color="lightblue">{{day}}:</span>
+{{#overdue}}<span color="red">Overdue:</span>
+{{#trees}}{{#trees}}{{>subtree}}{{/trees}}{{/trees}}{{/overdue}}{{#days}}<span color="lightblue">{{day}}:</span>
 {{#trees}}{{#trees}}{{>subtree}}{{/trees}}{{/trees}}{{^trees}}
 {{/trees}}{{/days}}

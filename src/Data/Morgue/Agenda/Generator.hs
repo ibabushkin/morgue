@@ -45,7 +45,7 @@ instance Monoid TimedResult where
 
 instance ToJSON TimedResult where
     toJSON (TimedResult overdue days) = object
-        [ "overdue" .= overdue
+        [ "overdue" .= overdueToJSON overdue
         , "days" .= M.foldrWithKey go [] days
         , "week" .= toWeekInfo ((,) <$> safeGet M.findMin <*> safeGet M.findMax)
         ]
@@ -57,6 +57,8 @@ instance ToJSON TimedResult where
               safeGet fun
                   | null days = Nothing
                   | otherwise = Just . fst $ fun days
+              overdueToJSON [] = Null
+              overdueToJSON ov = object [ "trees" .= ov ]
 
 -- | compute a timed agenda
 timedResult :: TimedParams -> AgendaFile -> TimedResult
